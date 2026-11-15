@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Droosy_BL/Droosy_BL.csproj" />
+  <Project Path="Droosy_DAL/Droosy_DAL.csproj" />
+  <Project Path="Droosy_PL/Droosy_PL.csproj" />
+</Solution>
