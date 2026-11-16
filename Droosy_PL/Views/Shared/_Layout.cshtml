@@ -1,50 +1,7 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Droosy_PL</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Droosy_PL.styles.css" asp-append-version="true" />
-</head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Droosy_PL</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - Droosy_PL - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
-</body>
-</html>
+@{var screen=Model as DemoPage??ViewData["Page"] as DemoPage;var inside=screen?.Account!=null&&ViewContext.RouteData.Values["action"]?.ToString()!="Index";var title=ViewData["Title"] as string??screen?.Title??"دروسي";}
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/><meta name="theme-color" content="#0e5a46"/><title>@title | دروسي</title><link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/></head><body><div class="app-shell">
+<header class="topbar"><a class="brand" href="/Demo"><span class="brand-mark">د</span><span>دروسي<small>DROOSY</small></span></a><span class="demo-label"><i></i> تجربة تفاعلية</span></header>
+@if(inside){<div class="demo-strip"><span>@(screen!.IsTeacher?"حساب المدرس":screen.IsParent?"حساب ولي الأمر":"حساب الطالب")</span><a href="/Demo">تبديل الدور ⇄</a></div><div class="page-heading"><div><p class="eyebrow">معك في رحلة التعلم</p><h1>@title</h1><p>@screen.Subtitle</p></div><button type="button" class="help-button" data-show-hints aria-label="إظهار شرح الصفحة">؟</button></div>@if(screen.IsParent){<div class="child-tabs" aria-label="اختيار الابن">@foreach(var child in screen.Students){<form asp-action="Child" method="post"><input type="hidden" name="section" value="@screen.Section"/><input type="hidden" name="studentId" value="@child.Id"/><button type="submit" class="@(screen.Student?.Id==child.Id?"selected":"")"><span class="avatar">@child.DisplayName[..1]</span>@child.DisplayName.Split(' ')[0]</button></form>}</div>}}
+<main id="main">@if(TempData["Success"] is string success){<div class="toast" role="status">✓ @success<button data-dismiss type="button" aria-label="إغلاق">×</button></div>}@RenderBody()</main>
+@if(inside){<nav class="bottom-nav" aria-label="التنقل الرئيسي"><a class="@(screen!.Section=="home"?"active":"")" href="/Demo/Dashboard"><span class="nav-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#home"></use></svg></span>الرئيسية</a><a class="@(screen.Section=="courses"?"active":"")" href="/Demo/Dashboard?section=courses"><span class="nav-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#book"></use></svg></span>@(screen.IsTeacher?"المحتوى":screen.IsParent?"الدروس":"كورساتي")</a><a class="@(screen.Section==(screen.IsTeacher?"groups":"subscriptions")?"active":"")" href="/Demo/Dashboard?section=@(screen.IsTeacher?"groups":"subscriptions")"><span class="nav-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#@(screen.IsTeacher?"users":"wallet")"></use></svg></span>@(screen.IsTeacher?"المجموعات":"الاشتراك")</a><a class="@(screen.Section=="more"?"active":"")" href="/Demo/Dashboard?section=more"><span class="nav-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#more"></use></svg></span>المزيد</a></nav>}
+<footer class="footnote">دروسي · نتعلم، نتابع، ونكبر معًا</footer></div><script src="~/js/site.js" asp-append-version="true" defer></script>@await RenderSectionAsync("Scripts",required:false)</body></html>
