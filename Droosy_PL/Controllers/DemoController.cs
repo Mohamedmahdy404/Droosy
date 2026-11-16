@@ -7,8 +7,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Droosy_PL.Controllers;
 
-public class DemoController(ApplicationDbContext db, LearningService learning) : Controller
+public partial class DemoController(ApplicationDbContext db, LearningService learning, AttendanceService attendance, ProgressService progress, IWebHostEnvironment environment, AssessmentService assessments, NotificationService notifications, Droosy_PL.Services.UploadStore uploads) : Controller
 {
+    private static readonly IReadOnlyDictionary<string,string> FeatureRoutes=new Dictionary<string,string>
+    {
+        ["assignments"]=nameof(Assignments),["exams"]=nameof(Exams),["results"]=nameof(Results),["messages"]=nameof(Messages),["announcements"]=nameof(Announcements),["notifications"]=nameof(Notifications),["weekly"]=nameof(Weekly),["students"]=nameof(Students),["review"]=nameof(Review)
+    };
     private static readonly TimeZoneInfo Cairo = TimeZoneInfo.FindSystemTimeZoneById("Egypt Standard Time");
 
     private async Task<DemoPage> Page(string section = "home")
@@ -41,6 +45,20 @@ public class DemoController(ApplicationDbContext db, LearningService learning) :
             .Include(x => x.Student).Include(x => x.Course).Include(x => x.Payments)
             .Where(x => page.IsTeacher || x.StudentId == studentId)
             .OrderBy(x => x.StudentId).ToListAsync();
+        page.ProgressRows = await db.LessonProgresses.AsNoTracking().Where(x => page.IsTeacher || x.StudentId == studentId).ToListAsync();
+        page.Sessions = await db.ClassSessions.AsNoTracking().Include(x => x.Group).Include(x => x.Attendances).Where(x => page.IsTeacher || (x.IsApproved && x.Group.Students.Any(s => s.StudentId == studentId))).OrderByDescending(x => x.StartsAtUtc).ToListAsync();
+        var courseIds=page.Courses.Select(x=>x.Id).ToArray();
+        page.Assignments=await db.Assignments.AsNoTracking().Where(x=>courseIds.Contains(x.CourseId)).OrderBy(x=>x.DueAtUtc).ToListAsync();
+        page.Submissions=await db.AssignmentSubmissions.AsNoTracking().Include(x=>x.Student).Where(x=>page.IsTeacher?x.Status!=SubmissionStatus.Draft:x.StudentId==studentId).ToListAsync();
+        page.Exams=await db.Exams.AsNoTracking().Include(x=>x.Questions).ThenInclude(x=>x.Choices).Where(x=>courseIds.Contains(x.CourseId)).OrderBy(x=>x.OpensAtUtc).ToListAsync();
+        page.Attempts=await db.ExamAttempts.AsNoTracking().Include(x=>x.Student).Include(x=>x.Answers).Where(x=>page.IsTeacher||x.StudentId==studentId).ToListAsync();
+        foreach(var attempt in page.Attempts)attempt.Exam=page.Exams.Single(x=>x.Id==attempt.ExamId);
+        await ExpireAttempts(page);
+        page.Conversations=await db.Conversations.AsNoTracking().Include(x=>x.Student).Include(x=>x.OtherUser).Include(x=>x.Messages).Where(x=>(x.TeacherId==page.Account.Id||x.OtherUserId==page.Account.Id)&&(!page.IsParent||x.StudentId==studentId)).ToListAsync();
+        page.Notifications=await db.Notifications.AsNoTracking().Where(x=>x.UserId==page.Account.Id&&(!page.IsParent||x.StudentId==null||x.StudentId==studentId)).OrderByDescending(x=>x.CreatedAtUtc).ToListAsync();
+        var groupIds=page.Groups.Select(x=>x.Id).ToArray();
+        page.Announcements=await db.Announcements.AsNoTracking().Where(x=>x.PublishedAtUtc<=DateTime.UtcNow&&(page.IsTeacher||x.GroupId==null||groupIds.Contains(x.GroupId))).OrderByDescending(x=>x.PublishedAtUtc).ToListAsync();
+        page.Attention=BuildAttention(page);
         return page;
     }
 
@@ -65,13 +83,16 @@ public class DemoController(ApplicationDbContext db, LearningService learning) :
         Response.Cookies.Append("droosy-child", studentId,
             new CookieOptions { Path = "/", IsEssential = true, SameSite = SameSiteMode.Lax });
         // Keep the current tab while changing children, including from a course detail.
-        if (!new[] { "home", "courses", "groups", "subscriptions", "more" }.Contains(section)) section = "home";
+        if (!new[] { "home", "courses", "groups", "subscriptions", "attendance", "progress", "more" }.Contains(section) && !FeatureRoutes.ContainsKey(section)) section = "home";
         return RedirectToAction(nameof(Dashboard), new { section });
     }
 
     public async Task<IActionResult> Dashboard(string section = "home")
     {
-        if (!new[] { "home", "courses", "groups", "subscriptions", "more" }.Contains(section)) return NotFound();
+        if(FeatureRoutes.TryGetValue(section,out var destination))return RedirectToAction(destination);
+        if (!new[] { "home", "courses", "groups", "subscriptions", "attendance", "progress", "more" }.Contains(section)) return NotFound();
+        if (section == "attendance") return RedirectToAction(nameof(Attendance));
+        if (section == "progress") return RedirectToAction(nameof(Progress));
         var page = await Page(section);
         if (page.Account == null) return RedirectToAction(nameof(Index));
         page.Title = section switch
@@ -119,6 +140,9 @@ public class DemoController(ApplicationDbContext db, LearningService learning) :
         page.Lesson = page.Courses.SelectMany(x => x.Units).SelectMany(x => x.Lessons).SingleOrDefault(x => x.Id == id);
         if (page.Lesson == null || (!page.IsTeacher && !LearningService.IsPublished(page.Lesson))) return NotFound();
         page.CanOpen = page.IsTeacher || await learning.CanOpenAsync(page.Student!.Id, page.Lesson);
+        page.CurrentProgress = page.ProgressRows.SingleOrDefault(x => x.StudentId == page.Student!.Id && x.LessonId == id);
+        if (page.CanOpen && !page.IsTeacher && !page.IsParent)
+            page.CurrentProgress = await progress.OpenAsync(page.Student!.Id, id);
         page.Title = page.CanOpen ? page.Lesson.Title : "المحتوى مقيد";
         page.Subtitle = page.Lesson.Unit.Course.Title;
         return View(page);
@@ -181,4 +205,6 @@ public class DemoController(ApplicationDbContext db, LearningService learning) :
         return RedirectToAction(nameof(Course), new { id = courseId });
     }
 }
+
+
 

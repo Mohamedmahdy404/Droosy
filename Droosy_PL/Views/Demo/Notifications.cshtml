@@ -1,0 +1,4 @@
+@model DemoPage
+@if(Model.Notifications.Any(x=>x.ReadAtUtc==null)){<form asp-antiforgery="false" asp-action="ReadNotifications" method="post"><button class="text-button" type="submit">تعليم الكل كمقروء ✓</button></form>}
+@foreach(var notification in Model.Notifications){<form asp-antiforgery="false" asp-action="OpenNotification" asp-route-id="@notification.Id" method="post"><button class="card notification-row @(notification.ReadAtUtc==null?"unread":"")" type="submit"><span class="tile-icon"><svg class="icon"><use href="/icons.svg#bell"></use></svg></span><span><strong>@notification.Title</strong><small>@DemoPage.DateAndTime(notification.CreatedAtUtc)</small></span>@if(notification.ReadAtUtc==null){<i class="unread-dot" aria-label="غير مقروء"></i>}</button></form>}
+@if(!Model.Notifications.Any()){<section class="empty-state"><h2>أنت متابع كل جديد</h2><p>الإشعارات التي تخصك ستظهر هنا.</p></section>}

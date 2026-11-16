@@ -1,4 +1,26 @@
 @model DemoPage
-@{var l=Model.Lesson!;}
-<a class="back-link" href="/Demo/Course/@l.Unit.CourseId">→ العودة للكورس</a>
-@if(!Model.CanOpen){<section class="empty-state locked-state"><span class="lock-orb"><svg class="icon" aria-hidden="true"><use href="/icons.svg#lock"></use></svg></span><span class="badge amber">يحتاج اشتراكًا ساريًا</span><h2>نكمل الرحلة باشتراك نشط</h2><p>درس «@l.Title» ضمن محتوى الكورس المقيد. تقدر تجرّب الدرس المجاني أو تراجع تفاصيل الاشتراك.</p><a class="button full" href="/Demo/Dashboard?section=subscriptions">عرض الاشتراك</a><a class="text-button" href="/Demo/Course/@l.Unit.CourseId">تصفح دروس المعاينة ←</a></section>}else{<section><div class="lesson-cover"><span aria-hidden="true">@(l.ContentType==LessonContentType.Video?"▷":"▤")</span><p>@l.Unit.Title</p></div><article class="card"><span class="badge">@(l.IsPreview?"معاينة مجانية":"ضمن الاشتراك")</span><h2>@l.Title</h2><p class="lesson-description">@l.Description</p><div class="stage-note"><span>◷</span><p>هذه معاينة للدرس. تشغيل المحتوى الكامل والملزمة وحفظ التقدم سيتاحون قريبًا.</p></div>@if(Model.IsTeacher){<a class="button full" href="/Demo/Edit/@l.Id">تعديل الدرس ✎</a>}</article></section>}
+@using Droosy_DAL.Seeding
+@{ var lesson = Model.Lesson!; var explanation = DemoLessonContent.Lessons[lesson.Id]; var video = lesson.ContentType == LessonContentType.Video; var studentView = !Model.IsTeacher && !Model.IsParent; var row = Model.CurrentProgress; var watched = (int)Math.Min(100, ProgressService.WatchedSeconds(row) / DemoLessonContent.VideoDurationSeconds * 100); }
+<a class="back-link" href="/Demo/Course/@lesson.Unit.CourseId">→ العودة للكورس</a>
+@if (!Model.CanOpen)
+{
+    <section class="empty-state locked-state"><span class="lock-orb"><svg class="icon" aria-hidden="true"><use href="/icons.svg#lock"></use></svg></span><span class="badge amber">يحتاج اشتراكًا ساريًا</span><h2>نكمل الرحلة باشتراك نشط</h2><p>درس «@lesson.Title» وملزمته ضمن محتوى الكورس المقيد. تقدر تجرّب درس المعاينة أو تراجع الاشتراك.</p>@if (row != null) { <p class="muted">تقدمك السابق محفوظ: @TrackingDisplay.Progress(row).</p> }<a class="button full" href="/Demo/Dashboard?section=subscriptions">عرض الاشتراك</a><a class="text-button" href="/Demo/Course/@lesson.Unit.CourseId">تصفح دروس المعاينة ←</a></section>
+}
+else
+{
+    @if (video)
+    {
+        <section class="video-card"><video controls playsinline preload="metadata" @(studentView ? "data-lesson-video" : null) data-save-url="/Demo/SaveVideoProgress/@lesson.Id" data-position="@((row?.LastPositionSeconds ?? 0).ToString(System.Globalization.CultureInfo.InvariantCulture))" data-completed="@(row?.IsCompleted == true ? "true" : "false")" poster="/Demo/Material/@lesson.Id?kind=poster" aria-label="شرح @lesson.Title"><source src="/Demo/Material/@lesson.Id?kind=video" type="video/mp4" /><p>متصفحك لا يدعم تشغيل الفيديو.</p></video><div class="video-caption"><span>شرح مرئي قصير · ٤٨ ثانية</span><span>بدون تشغيل تلقائي</span></div></section>
+        @if (studentView) { <section class="video-progress card"><div class="card-top"><strong>رحلتك في الدرس</strong><span class="badge" data-video-state>@TrackingDisplay.Progress(row)</span></div><div class="learning-track" role="progressbar" aria-label="تقدم مشاهدة الفيديو" aria-valuenow="@watched" aria-valuemin="0" aria-valuemax="100" data-video-meter><span style="width:@watched%" data-video-bar></span></div><p class="muted" data-video-message>شاهدت @watched٪. يكتمل الدرس بعد مشاهدة ٩٠٪ فعليًا.</p><p class="save-state" role="status" aria-live="polite" data-video-save-state>نحفظ موضعك أثناء المشاهدة.</p><button type="button" class="text-button" data-retry-progress hidden>إعادة محاولة الحفظ ←</button></section> }
+    }
+    <article class="card lesson-reading"><span class="badge">@(lesson.IsPreview ? "معاينة مجانية" : "ضمن الاشتراك")</span><h2>@lesson.Title</h2><p class="lesson-description">@lesson.Description</p><h3>نفهم الفكرة</h3>@foreach (var paragraph in explanation.Paragraphs) { <p>@paragraph</p> }<div class="worked-example"><span class="eyebrow">مثال محلول</span><p>@explanation.Example</p></div><div class="practice-question"><span class="eyebrow">جرّب بنفسك</span><p>@explanation.Exercise</p></div></article>
+    <section class="card material-card"><span class="tile-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#file"></use></svg></span><div><h2>ملزمة الدرس</h2><p>الفكرة، مثال محلول، وتدريب للمراجعة</p></div><a class="button secondary full" href="/Demo/Material/@lesson.Id" target="_blank" rel="noopener">فتح الملزمة PDF ↗</a><a class="text-button" href="/Demo/Material/@lesson.Id?download=true">تنزيل الملزمة ↓</a></section>
+    @if (studentView && !video)
+    {
+        @if (row?.IsCompleted == true) { <div class="completion-card"><strong>✓ أكملت الدرس</strong><p>تم حفظ تقدمك، ويمكن لولي الأمر متابعته.</p></div> }
+        else { <div class="coachmark" data-hint="complete" role="note"><button type="button" data-dismiss aria-label="إغلاق الشرح">×</button>بعد قراءة الشرح ومراجعة المثال، اضغط «أكملت الدرس». تُحفظ الحالة وتظهر عند ولي الأمر.</div><form asp-antiforgery="false" asp-action="CompleteText" asp-route-id="@lesson.Id" method="post"><button type="submit" class="button full">أكملت الدرس ✓</button></form> }
+    }
+    @if (Model.IsParent || Model.IsTeacher) { <div class="stage-note"><span>ⓘ</span><p>أنت تعرض المحتوى للمتابعة. فتح الدرس أو تشغيله هنا لا يغير تقدم الطالب.</p></div> }
+    @if (Model.IsTeacher) { <a class="button secondary full" href="/Demo/Edit/@lesson.Id">تعديل الدرس ✎</a> }
+}
+@section Scripts { @if (studentView && video && Model.CanOpen) { <script src="~/js/lesson-player.js" asp-append-version="true" defer></script> } }

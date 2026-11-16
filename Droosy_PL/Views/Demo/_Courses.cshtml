@@ -1,3 +1,10 @@
 @model DemoPage
-@foreach(var c in Model.Courses){var count=c.Units.SelectMany(x=>x.Lessons).Count(x=>Model.IsTeacher||LearningService.IsPublished(x));<a class="course-card card" href="/Demo/Course/@c.Id"><div class="course-cover @(c.Id=="GEO"?"geometry":"")"><span class="badge">@c.Level.Name</span><span class="course-formula" aria-hidden="true">@(c.Id=="ALG"?"𝑥 + ٥ = ١٢":"△")</span><span class="cover-dot"></span></div><div class="course-info"><span class="eyebrow">الرياضيات · أ. محمد عادل</span><h2>@c.Title</h2><p>@c.Description</p><div class="course-meta"><span>▤ @count دروس</span><span>وحدتان</span><strong>استكشف الكورس ←</strong></div></div></a>}
-@if(!Model.Courses.Any()){<div class="empty-state"><h2>لا توجد كورسات بعد</h2><p>الكورسات المسجل بها الطالب هتظهر هنا.</p></div>}
+@foreach (var course in Model.Courses)
+{
+    var lessons = course.Units.SelectMany(x => x.Lessons).Where(x => Model.IsTeacher || LearningService.IsPublished(x)).ToList();
+    var completed = lessons.Count(l => Model.ProgressRows.Any(p => p.StudentId == Model.Student?.Id && p.LessonId == l.Id && p.IsCompleted));
+    <a class="course-card card" href="/Demo/Course/@course.Id"><div class="course-cover @(course.Id == "GEO" ? "geometry" : "")"><span class="badge">@course.Level.Name</span><span class="course-formula" aria-hidden="true">@(course.Id == "ALG" ? "𝑥 + ٥ = ١٢" : "△")</span><span class="cover-dot"></span></div><div class="course-info"><span class="eyebrow">الرياضيات · أ. محمد عادل</span><h2>@course.Title</h2><p>@course.Description</p>
+    @if (!Model.IsTeacher) { <div class="learning-track" role="progressbar" aria-label="نسبة الدروس المكتملة" aria-valuenow="@(lessons.Count == 0 ? 0 : completed * 100 / lessons.Count)" aria-valuemin="0" aria-valuemax="100"><span style="width:@(lessons.Count == 0 ? 0 : completed * 100 / lessons.Count)%"></span></div><small class="muted">@completed من @lessons.Count دروس منشورة مكتملة</small> }
+    <div class="course-meta"><span>▤ @lessons.Count دروس</span><span>@course.Units.Count وحدات</span><strong>استكشف الكورس ←</strong></div></div></a>
+}
+@if (!Model.Courses.Any()) { <div class="empty-state"><h2>لا توجد كورسات بعد</h2><p>الكورسات المسجل بها الطالب هتظهر هنا.</p></div> }

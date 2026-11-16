@@ -1,0 +1,26 @@
+@model AssignmentPageModel
+@{var page=Model.Page;var work=Model.Assignment;var row=Model.Submission;var editable=!page.IsTeacher&&!page.IsParent&&(row==null||row.Status is SubmissionStatus.Draft or SubmissionStatus.Returned);}
+<a class="back-link" href="/Demo/Assignments">→ الواجبات</a>
+<section class="card task-detail"><div class="card-top"><span class="eyebrow">واجب · @work.MaxScore درجات</span><span class="badge amber">التسليم @DemoPage.DateAndTime(work.DueAtUtc)</span></div><h2>@work.Title</h2><p class="instructions">@work.Instructions</p><p class="muted">الموعد بتوقيت القاهرة. التسليم بعد الموعد يظل مسجلًا كتسليم متأخر.</p></section>
+@if(page.IsTeacher)
+{
+ <div class="section-title"><h2>التسليمات</h2><small>@Model.TeacherSubmissions.Count تسليمات · المسودات لا تظهر</small></div>
+ @foreach(var sub in Model.TeacherSubmissions.OrderBy(x=>x.StudentId)){<a class="list-card" href="/Demo/Assignment/@work.Id?studentId=@sub.StudentId"><span class="avatar">@sub.Student.DisplayName[..1]</span><span><strong>@sub.Student.DisplayName</strong><small>@AssessmentService.SubmissionLabel(work,sub,DateTime.UtcNow)</small></span><span class="chevron">‹</span></a>}
+ @if(!Model.TeacherSubmissions.Any()){<div class="empty-state"><h2>لا توجد تسليمات بعد</h2><p>المسودة التي يحفظها الطالب لا تظهر هنا.</p></div>}
+}
+@if(row!=null&&row.Status!=SubmissionStatus.Draft)
+{
+ <section class="card answer-card"><div class="card-top"><h2>حل @(page.IsTeacher?Model.SelectedStudent?.DisplayName:page.IsParent?page.Student!.DisplayName:"الطالب")</h2><span class="badge @(row.SubmittedAtUtc>work.DueAtUtc?"amber":"")">@(row.SubmittedAtUtc>work.DueAtUtc?"تسليم متأخر":"تم التسليم")</span></div><p class="answer-text">@row.AnswerText</p>@if(row.AttachmentPath!=null){<a class="attachment-link" href="/Demo/SubmissionAttachment/@row.Id" target="_blank" rel="noopener"><svg class="icon"><use href="/icons.svg#attach"></use></svg>@row.AttachmentName ↗</a>}<small class="muted">تاريخ التسليم: @DemoPage.DateAndTime(row.SubmittedAtUtc!.Value)</small></section>
+ @if(row.Status==SubmissionStatus.Returned){<div class="return-card"><strong>الحل معاد للتعديل</strong><p>@row.ReturnReason</p></div>}
+ @if(row.PublishedAtUtc!=null){<section class="card published-grade"><span class="eyebrow">التصحيح المنشور</span><strong>@row.PublishedScore <small>/ @work.MaxScore</small></strong><p>@row.PublishedFeedback</p><small>نُشر @DemoPage.DateAndTime(row.PublishedAtUtc.Value)</small></section>}
+ else if(!page.IsTeacher&&row.Status!=SubmissionStatus.Returned){<div class="stage-note"><span>◷</span><p>التصحيح قيد المراجعة. ستظهر الدرجة والملاحظة بعد النشر.</p></div>}
+}
+@if(editable)
+{
+ <form asp-antiforgery="false" asp-action="SaveAssignment" asp-route-id="@work.Id" method="post" enctype="multipart/form-data" class="card"><div class="field"><label for="answer-text">حلّك، بخطواتك</label><textarea name="answerText" id="answer-text" rows="7" maxlength="5000" placeholder="اكتب خطوات الحل هنا...">@row?.AnswerText</textarea></div><label class="upload-field">إضافة صورة أو PDF<input name="attachment" type="file" accept="image/png,image/jpeg,application/pdf"/><small>حتى ٥ ميجابايت. اختيار مرفق جديد يستبدل المرفق الحالي.</small></label>@if(row?.AttachmentPath!=null){<p class="muted">المرفق الحالي: @row.AttachmentName</p>}<div class="coachmark" data-hint="submit-work" role="note"><button type="button" data-dismiss aria-label="إغلاق الشرح">×</button>تسليم الواجب يرسله للمدرس. حفظ المسودة يحتفظ بالحل لك فقط، ويمكنك استكماله لاحقًا.</div><button class="button full" name="intent" value="submit" type="submit">@(row?.Status==SubmissionStatus.Returned?"إعادة تسليم الواجب":"تسليم الواجب")</button><button class="button secondary full" name="intent" value="draft" type="submit">حفظ المسودة</button></form>
+}
+@if(page.IsTeacher&&row!=null&&row.Status!=SubmissionStatus.Draft)
+{
+ <form asp-antiforgery="false" asp-action="GradeAssignment" asp-route-id="@row.Id" method="post" class="card"><h2>مراجعة وتصحيح الحل</h2><div class="field"><label for="grade-score">الدرجة من @work.MaxScore</label><input id="grade-score" name="score" type="number" min="0" max="@work.MaxScore" value="@row.Score" inputmode="numeric"/></div><div class="field"><label for="grade-feedback">ملاحظتك أو سبب الإرجاع</label><textarea id="grade-feedback" name="feedback" rows="4" maxlength="2000">@(row.Status==SubmissionStatus.Returned?row.ReturnReason:row.Feedback)</textarea></div><div class="coachmark" data-hint="publish-grade" role="note"><button type="button" data-dismiss aria-label="إغلاق الشرح">×</button>حفظ التصحيح لا يغير الدرجة المنشورة. نشر التصحيح يظهر الدرجة والملاحظة للطالب والأهل، وصفر درجة صحيحة.</div><button type="submit" name="intent" value="publish" class="button full">نشر التصحيح</button><button type="submit" name="intent" value="save" class="button secondary full">حفظ التصحيح</button><button type="submit" name="intent" value="return" class="text-button">إرجاع للطالب للتعديل ←</button></form>
+}
+@if(!page.IsTeacher){<form asp-antiforgery="false" asp-action="BeginChat" method="post"><input type="hidden" name="contextType" value="Assignment"/><input type="hidden" name="contextId" value="@work.Id"/><button type="submit" class="button secondary full">راسل المدرس بخصوص الواجب</button></form>}

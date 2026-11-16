@@ -1,0 +1,37 @@
+@model ExamPageModel
+@{var page=Model.Page;var exam=Model.Exam;var attempt=Model.Attempt;var solving=!page.IsTeacher&&!page.IsParent&&attempt!=null&&attempt.SubmittedAtUtc==null;}
+<a class="back-link" href="/Demo/Exams">→ الاختبارات</a>
+<section class="card task-detail"><span class="eyebrow">@exam.Questions.Count أسئلة · @exam.DurationMinutes دقائق · @exam.Questions.Sum(x=>x.Points) درجات</span><h2>@exam.Title</h2><p class="muted">الإتاحة: @DemoPage.DateAndTime(exam.OpensAtUtc) — @DemoPage.DateAndTime(exam.ClosesAtUtc)</p></section>
+@if(page.IsTeacher)
+{
+ <div class="section-title"><h2>محاولات الطلاب</h2><small>@Model.TeacherAttempts.Count محاولات</small></div>@foreach(var item in Model.TeacherAttempts.OrderBy(x=>x.StudentId)){<a class="list-card" href="/Demo/Exam/@exam.Id?studentId=@item.StudentId"><span class="avatar">@item.Student.DisplayName[..1]</span><span><strong>@item.Student.DisplayName</strong><small>@(item.SubmittedAtUtc==null?"قيد الحل":item.PublishedAtUtc==null?"بانتظار النشر":"النتيجة منشورة")</small></span><span class="badge">@(item.Score.HasValue?item.Score+" / "+exam.Questions.Sum(x=>x.Points):"—")</span></a>}
+}
+@if(Model.CanStart)
+{
+ <section class="card exam-intro"><h2>جاهز لخطوة جديدة؟</h2><p>٥ أسئلة اختيار من متعدد، ومحاولة واحدة. بعد البدء، الخروج من الصفحة لا يوقف الوقت. نحفظ إجاباتك أثناء الحل.</p><div class="coachmark" data-hint="start-exam" role="note"><button type="button" data-dismiss aria-label="إغلاق الشرح">×</button>بدء الاختبار يبدأ الوقت فورًا. لو رجعت للصفحة لاحقًا، تكمل نفس المحاولة بالوقت المتبقي.</div><form asp-antiforgery="false" asp-action="StartExam" asp-route-id="@exam.Id" method="post"><button type="submit" class="button full">بدء الاختبار ←</button></form></section>
+}
+else if(solving)
+{
+ <form asp-antiforgery="false" asp-action="SaveExam" asp-route-id="@exam.Id" method="post" data-exam-form data-deadline="@(DateTime.SpecifyKind(attempt!.DeadlineAtUtc,DateTimeKind.Utc).ToString("O"))" data-server-now="@DateTime.UtcNow.ToString("O")"><div class="exam-timer"><span>الوقت المتبقي</span><strong data-exam-time>حسب موعد المحاولة</strong><small data-exam-save-state role="status" aria-live="polite">تُحفظ الإجابات أثناء الحل</small></div><div class="question-jumps" aria-label="أسئلة الاختبار">@foreach(var q in exam.Questions.OrderBy(x=>x.SortOrder)){<button type="button" data-question-jump="@(q.SortOrder-1)">@q.SortOrder</button>}</div>
+ @foreach(var question in exam.Questions.OrderBy(x=>x.SortOrder))
+ {
+  var selected=attempt!.Answers.SingleOrDefault(x=>x.QuestionId==question.Id)?.ChoiceId;
+  <fieldset class="card exam-question" data-exam-question><legend class="sr-only">السؤال @question.SortOrder</legend><span class="eyebrow">السؤال @question.SortOrder من @exam.Questions.Count · @question.Points درجات</span><h2 dir="auto">@question.Text</h2><div class="exam-choices">@foreach(var choice in question.Choices.OrderBy(x=>x.SortOrder)){<label><input type="radio" name="answers[@question.Id]" value="@choice.Id" checked="@(choice.Id==selected)"/><span>@choice.Text</span></label>}</div></fieldset>
+ }
+ <div class="question-navigation"><button type="button" class="button secondary" data-question-prev>السابق</button><span data-question-number></span><button type="button" class="button secondary" data-question-next>التالي</button></div><button type="submit" name="intent" value="submit" class="button full" data-exam-submit>تسليم الاختبار</button><button type="submit" name="intent" value="save" class="text-button" data-exam-save>حفظ الإجابات الآن</button><p class="muted">عند انتهاء الوقت تُعتمد الإجابات المحفوظة، ولا يمكن تعديلها بعد التسليم.</p><dialog class="exam-confirm" data-exam-confirm><h2>نسلّم الاختبار؟</h2><p>راجع إجاباتك قبل التسليم. بعد التسليم لا يمكن تعديلها.</p><button type="button" class="button full" data-confirm-submit>تأكيد التسليم</button><button type="button" class="text-button" data-cancel-submit>العودة للحل</button></dialog></form>
+}
+else if(attempt!=null&&attempt.SubmittedAtUtc!=null)
+{
+ @if(Model.RevealAnswers){<section class="card published-grade"><span class="eyebrow">@(page.IsTeacher?"الدرجة المحسوبة":"نتيجتك المنشورة") · @Model.SelectedStudent?.DisplayName</span><strong>@attempt.Score <small>/ @exam.Questions.Sum(x=>x.Points)</small></strong><p>@(attempt.Score==0?"صفر درجة فعلية من الإجابات المسجلة؛ ليست غيابًا.":"راجع خطوات الإجابة وتعلّم من كل محاولة.")</p></section>}
+ else{<section class="empty-state"><h2>تم تسليم الاختبار</h2><p>النتيجة قيد المراجعة. الدرجة ومراجعة الحل ستظهران بعد نشرهما.</p></section>}
+ @if(page.IsTeacher&&attempt.PublishedAtUtc==null){<div class="coachmark" data-hint="publish-exam" role="note"><button type="button" data-dismiss aria-label="إغلاق الشرح">×</button>الدرجة محسوبة من الإجابات ولا تُعدل يدويًا. نشر النتيجة يتيح الدرجة والشرح للطالب وولي الأمر.</div><form asp-antiforgery="false" asp-action="PublishExam" asp-route-id="@attempt.Id" method="post"><button class="button full" type="submit">نشر النتيجة</button></form>}
+}
+else if(!page.IsTeacher){<section class="empty-state"><h2>@(exam.OpensAtUtc>DateTime.UtcNow?"الاختبار لم يبدأ بعد":exam.ClosesAtUtc<DateTime.UtcNow?"لم يدخل الطالب هذا الاختبار":"الاختبار متاح للطالب")</h2><p>@(page.IsParent?"ولي الأمر يتابع النتائج؛ بدء الاختبار من حساب الطالب فقط.":"راجع نافذة إتاحة الاختبار.")</p></section>}
+@if(Model.RevealAnswers&&attempt?.SubmittedAtUtc!=null)
+{
+ <div class="section-title"><h2>مراجعة الإجابات</h2></div>@foreach(var question in exam.Questions.OrderBy(x=>x.SortOrder)){var selected=attempt!.Answers.SingleOrDefault(x=>x.QuestionId==question.Id);var choice=question.Choices.SingleOrDefault(x=>x.Id==selected?.ChoiceId);var correct=question.Choices.Single(x=>x.IsCorrect);<article class="card answer-review"><span class="badge @(choice?.IsCorrect==true?"":"danger")">@(choice==null?"لم يُجب":choice.IsCorrect?"إجابة صحيحة":"إجابة تحتاج مراجعة")</span><h2 dir="auto">@question.Text</h2><p>إجابة الطالب: @(choice?.Text??"بدون إجابة")</p><p>الإجابة الصحيحة: @correct.Text</p><div class="teacher-note"><p>@question.Explanation</p></div></article>}
+ @if(!page.IsTeacher){<form asp-antiforgery="false" asp-action="BeginChat" method="post"><input type="hidden" name="contextType" value="Exam"/><input type="hidden" name="contextId" value="@exam.Id"/><button type="submit" class="button secondary full">راسل المدرس بخصوص النتيجة</button></form>}
+}
+@section Scripts { @if(solving){<script src="~/js/exam-runner.js" asp-append-version="true" defer></script>} }
+
+

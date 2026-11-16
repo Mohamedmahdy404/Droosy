@@ -24,8 +24,16 @@ namespace Droosy_DAL.Migrations
 
             modelBuilder.Entity("Droosy_DAL.Entities.AcademicLevel", b =>
                 {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -34,15 +42,23 @@ namespace Droosy_DAL.Migrations
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.HasKey("VisitorId", "Id");
 
                     b.ToTable("AcademicLevels");
                 });
 
             modelBuilder.Entity("Droosy_DAL.Entities.ActivationCode", b =>
                 {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -50,7 +66,8 @@ namespace Droosy_DAL.Migrations
 
                     b.Property<string>("CourseId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<DateTime>("ExpiresAtUtc")
                         .HasColumnType("datetime2");
@@ -59,28 +76,76 @@ namespace Droosy_DAL.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("RedeemedByStudentId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<decimal>("Value")
                         .HasPrecision(12, 2)
                         .HasColumnType("decimal(12,2)");
 
-                    b.HasKey("Id");
+                    b.HasKey("VisitorId", "Id");
 
-                    b.HasIndex("Code")
+                    b.HasIndex("VisitorId", "Code")
                         .IsUnique();
 
-                    b.HasIndex("CourseId");
+                    b.HasIndex("VisitorId", "CourseId");
 
-                    b.HasIndex("RedeemedByStudentId");
+                    b.HasIndex("VisitorId", "RedeemedByStudentId");
 
                     b.ToTable("ActivationCodes");
                 });
 
+            modelBuilder.Entity("Droosy_DAL.Entities.Announcement", b =>
+                {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GroupId")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTime>("PublishedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TargetUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("VisitorId", "Id");
+
+                    b.HasIndex("VisitorId", "GroupId");
+
+                    b.ToTable("Announcements");
+                });
+
             modelBuilder.Entity("Droosy_DAL.Entities.AppUser", b =>
                 {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
@@ -90,15 +155,331 @@ namespace Droosy_DAL.Migrations
                     b.Property<int>("Role")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.HasKey("VisitorId", "Id");
 
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Droosy_DAL.Entities.Assignment", b =>
+                {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("CourseId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTime>("DueAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Instructions")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MaxScore")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("VisitorId", "Id");
+
+                    b.HasIndex("VisitorId", "CourseId");
+
+                    b.ToTable("Assignments");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.AssignmentSubmission", b =>
+                {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("AnswerText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AssignmentId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("AttachmentName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AttachmentPath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AttachmentType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Feedback")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("GradedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PublishedFeedback")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("PublishedScore")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReturnReason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Score")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTime?>("SubmittedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("VisitorId", "Id");
+
+                    b.HasIndex("VisitorId", "AssignmentId");
+
+                    b.HasIndex("VisitorId", "StudentId");
+
+                    b.HasIndex("VisitorId", "AssignmentId", "StudentId")
+                        .IsUnique();
+
+                    b.ToTable("AssignmentSubmissions");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.Attendance", b =>
+                {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("PublishedNote")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int?>("PublishedStatus")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.HasKey("VisitorId", "Id");
+
+                    b.HasIndex("VisitorId", "SessionId");
+
+                    b.HasIndex("VisitorId", "StudentId");
+
+                    b.HasIndex("VisitorId", "SessionId", "StudentId")
+                        .IsUnique();
+
+                    b.ToTable("Attendances");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.AuditLog", b =>
+                {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ActorId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("AfterJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BeforeJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EntityId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("VisitorId", "Id");
+
+                    b.HasIndex("VisitorId", "ActorId");
+
+                    b.ToTable("AuditLogs");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.ClassSession", b =>
+                {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTime?>("ApprovedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DraftSavedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EndsAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GroupId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("StartsAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("VisitorId", "Id");
+
+                    b.HasIndex("VisitorId", "GroupId");
+
+                    b.ToTable("ClassSessions");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.Conversation", b =>
+                {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("ContextId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<int>("ContextType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OtherUserId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("TeacherId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.HasKey("VisitorId", "Id");
+
+                    b.HasIndex("VisitorId", "OtherUserId");
+
+                    b.HasIndex("VisitorId", "StudentId");
+
+                    b.HasIndex("VisitorId", "TeacherId");
+
+                    b.ToTable("Conversations");
+                });
+
             modelBuilder.Entity("Droosy_DAL.Entities.Course", b =>
                 {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -106,7 +487,8 @@ namespace Droosy_DAL.Migrations
 
                     b.Property<string>("LevelId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<decimal>("MonthlyPrice")
                         .HasPrecision(12, 2)
@@ -114,29 +496,39 @@ namespace Droosy_DAL.Migrations
 
                     b.Property<string>("TeacherId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("VisitorId", "Id");
 
-                    b.HasIndex("LevelId");
+                    b.HasIndex("VisitorId", "LevelId");
 
-                    b.HasIndex("TeacherId");
+                    b.HasIndex("VisitorId", "TeacherId");
 
                     b.ToTable("Courses");
                 });
 
             modelBuilder.Entity("Droosy_DAL.Entities.CourseUnit", b =>
                 {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<string>("CourseId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
@@ -145,23 +537,34 @@ namespace Droosy_DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("VisitorId", "Id");
 
-                    b.HasIndex("CourseId");
+                    b.HasIndex("VisitorId", "CourseId");
 
                     b.ToTable("CourseUnits");
                 });
 
             modelBuilder.Entity("Droosy_DAL.Entities.DemoState", b =>
                 {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<Guid>("DataGenerationId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateOnly>("DemoAnchorDate")
                         .HasColumnType("date");
+
+                    b.Property<Guid>("RuntimeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("SeedVersion")
                         .IsRequired()
@@ -170,30 +573,251 @@ namespace Droosy_DAL.Migrations
                     b.Property<DateTime>("SeededAtUtc")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("Id");
+                    b.HasKey("VisitorId", "Id");
 
                     b.ToTable("DemoStates");
                 });
 
-            modelBuilder.Entity("Droosy_DAL.Entities.GroupStudent", b =>
+            modelBuilder.Entity("Droosy_DAL.Entities.Exam", b =>
                 {
-                    b.Property<string>("GroupId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTime>("ClosesAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CourseId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("OpensAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("VisitorId", "Id");
+
+                    b.HasIndex("VisitorId", "CourseId");
+
+                    b.ToTable("Exams");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.ExamAnswer", b =>
+                {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("AttemptId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("ChoiceId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("QuestionId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.HasKey("VisitorId", "Id");
+
+                    b.HasIndex("VisitorId", "AttemptId");
+
+                    b.HasIndex("VisitorId", "ChoiceId");
+
+                    b.HasIndex("VisitorId", "QuestionId");
+
+                    b.HasIndex("VisitorId", "AttemptId", "QuestionId")
+                        .IsUnique();
+
+                    b.ToTable("ExamAnswers");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.ExamAttempt", b =>
+                {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTime>("DeadlineAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ExamId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("Score")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartedAtUtc")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("StudentId")
-                        .HasColumnType("nvarchar(450)");
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
-                    b.HasKey("GroupId", "StudentId");
+                    b.Property<DateTime?>("SubmittedAtUtc")
+                        .HasColumnType("datetime2");
 
-                    b.HasIndex("StudentId");
+                    b.HasKey("VisitorId", "Id");
+
+                    b.HasIndex("VisitorId", "ExamId");
+
+                    b.HasIndex("VisitorId", "StudentId");
+
+                    b.HasIndex("VisitorId", "ExamId", "StudentId")
+                        .IsUnique();
+
+                    b.ToTable("ExamAttempts");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.ExamChoice", b =>
+                {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("QuestionId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("VisitorId", "Id");
+
+                    b.HasIndex("VisitorId", "QuestionId");
+
+                    b.ToTable("ExamChoices");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.ExamQuestion", b =>
+                {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("ExamId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("VisitorId", "Id");
+
+                    b.HasIndex("VisitorId", "ExamId");
+
+                    b.ToTable("ExamQuestions");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.GroupStudent", b =>
+                {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("GroupId")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("StudentId")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.HasKey("VisitorId", "GroupId", "StudentId");
+
+                    b.HasIndex("VisitorId", "StudentId");
 
                     b.ToTable("GroupStudents");
                 });
 
             modelBuilder.Entity("Droosy_DAL.Entities.Lesson", b =>
                 {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<int>("ContentType")
                         .HasColumnType("int");
@@ -222,34 +846,204 @@ namespace Droosy_DAL.Migrations
 
                     b.Property<string>("UnitId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
-                    b.HasKey("Id");
+                    b.HasKey("VisitorId", "Id");
 
-                    b.HasIndex("UnitId");
+                    b.HasIndex("VisitorId", "UnitId");
 
                     b.ToTable("Lessons");
                 });
 
-            modelBuilder.Entity("Droosy_DAL.Entities.ParentStudent", b =>
+            modelBuilder.Entity("Droosy_DAL.Entities.LessonProgress", b =>
                 {
-                    b.Property<string>("ParentId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastOpenedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<double>("LastPositionSeconds")
+                        .HasColumnType("float");
+
+                    b.Property<string>("LessonId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("WatchedRangesJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("VisitorId", "Id");
+
+                    b.HasIndex("VisitorId", "LessonId");
+
+                    b.HasIndex("VisitorId", "StudentId");
+
+                    b.HasIndex("VisitorId", "StudentId", "LessonId")
+                        .IsUnique();
+
+                    b.ToTable("LessonProgresses");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.Message", b =>
+                {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("AttachmentName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AttachmentPath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AttachmentType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ConversationId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTime?>("ReadAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTime>("SentAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("VisitorId", "Id");
+
+                    b.HasIndex("VisitorId", "ConversationId");
+
+                    b.HasIndex("VisitorId", "SenderId");
+
+                    b.ToTable("Messages");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.Notification", b =>
+                {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EventKey")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("ParentId", "StudentId");
+                    b.Property<DateTime?>("ReadAtUtc")
+                        .HasColumnType("datetime2");
 
-                    b.HasIndex("StudentId");
+                    b.Property<string>("StudentId")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("TargetUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.HasKey("VisitorId", "Id");
+
+                    b.HasIndex("VisitorId", "UserId");
+
+                    b.HasIndex("VisitorId", "UserId", "EventKey")
+                        .IsUnique();
+
+                    b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.ParentStudent", b =>
+                {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
+                    b.Property<string>("ParentId")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("StudentId")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.HasKey("VisitorId", "ParentId", "StudentId");
+
+                    b.HasIndex("VisitorId", "StudentId");
 
                     b.ToTable("ParentStudents");
                 });
 
             modelBuilder.Entity("Droosy_DAL.Entities.Payment", b =>
                 {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<decimal>("Amount")
                         .HasPrecision(12, 2)
@@ -264,25 +1058,35 @@ namespace Droosy_DAL.Migrations
 
                     b.Property<string>("RecordedByUserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<string>("SubscriptionId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
-                    b.HasKey("Id");
+                    b.HasKey("VisitorId", "Id");
 
-                    b.HasIndex("RecordedByUserId");
+                    b.HasIndex("VisitorId", "RecordedByUserId");
 
-                    b.HasIndex("SubscriptionId");
+                    b.HasIndex("VisitorId", "SubscriptionId");
 
                     b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("Droosy_DAL.Entities.PlatformSettings", b =>
                 {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -292,19 +1096,28 @@ namespace Droosy_DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("VisitorId", "Id");
 
                     b.ToTable("PlatformSettings");
                 });
 
             modelBuilder.Entity("Droosy_DAL.Entities.StudyGroup", b =>
                 {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<string>("CourseId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -314,21 +1127,30 @@ namespace Droosy_DAL.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("VisitorId", "Id");
 
-                    b.HasIndex("CourseId");
+                    b.HasIndex("VisitorId", "CourseId");
 
                     b.ToTable("StudyGroups");
                 });
 
             modelBuilder.Entity("Droosy_DAL.Entities.Subscription", b =>
                 {
+                    b.Property<string>("VisitorId")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .HasDefaultValue("template");
+
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<string>("CourseId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
                     b.Property<DateTime>("EndsAtUtc")
                         .HasColumnType("datetime2");
@@ -342,13 +1164,14 @@ namespace Droosy_DAL.Migrations
 
                     b.Property<string>("StudentId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
 
-                    b.HasKey("Id");
+                    b.HasKey("VisitorId", "Id");
 
-                    b.HasIndex("CourseId");
+                    b.HasIndex("VisitorId", "CourseId");
 
-                    b.HasIndex("StudentId");
+                    b.HasIndex("VisitorId", "StudentId");
 
                     b.ToTable("Subscriptions");
                 });
@@ -357,13 +1180,13 @@ namespace Droosy_DAL.Migrations
                 {
                     b.HasOne("Droosy_DAL.Entities.Course", "Course")
                         .WithMany()
-                        .HasForeignKey("CourseId")
+                        .HasForeignKey("VisitorId", "CourseId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Droosy_DAL.Entities.AppUser", "RedeemedByStudent")
                         .WithMany()
-                        .HasForeignKey("RedeemedByStudentId")
+                        .HasForeignKey("VisitorId", "RedeemedByStudentId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Course");
@@ -371,17 +1194,125 @@ namespace Droosy_DAL.Migrations
                     b.Navigation("RedeemedByStudent");
                 });
 
-            modelBuilder.Entity("Droosy_DAL.Entities.Course", b =>
+            modelBuilder.Entity("Droosy_DAL.Entities.Announcement", b =>
                 {
-                    b.HasOne("Droosy_DAL.Entities.AcademicLevel", "Level")
+                    b.HasOne("Droosy_DAL.Entities.StudyGroup", "Group")
                         .WithMany()
-                        .HasForeignKey("LevelId")
+                        .HasForeignKey("VisitorId", "GroupId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Group");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.Assignment", b =>
+                {
+                    b.HasOne("Droosy_DAL.Entities.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "CourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.AssignmentSubmission", b =>
+                {
+                    b.HasOne("Droosy_DAL.Entities.Assignment", "Assignment")
+                        .WithMany("Submissions")
+                        .HasForeignKey("VisitorId", "AssignmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Droosy_DAL.Entities.AppUser", "Student")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Assignment");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.Attendance", b =>
+                {
+                    b.HasOne("Droosy_DAL.Entities.ClassSession", "Session")
+                        .WithMany("Attendances")
+                        .HasForeignKey("VisitorId", "SessionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Droosy_DAL.Entities.AppUser", "Student")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Session");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.AuditLog", b =>
+                {
+                    b.HasOne("Droosy_DAL.Entities.AppUser", "Actor")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "ActorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Actor");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.ClassSession", b =>
+                {
+                    b.HasOne("Droosy_DAL.Entities.StudyGroup", "Group")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "GroupId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Group");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.Conversation", b =>
+                {
+                    b.HasOne("Droosy_DAL.Entities.AppUser", "OtherUser")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "OtherUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Droosy_DAL.Entities.AppUser", "Student")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "StudentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Droosy_DAL.Entities.AppUser", "Teacher")
                         .WithMany()
-                        .HasForeignKey("TeacherId")
+                        .HasForeignKey("VisitorId", "TeacherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("OtherUser");
+
+                    b.Navigation("Student");
+
+                    b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.Course", b =>
+                {
+                    b.HasOne("Droosy_DAL.Entities.AcademicLevel", "Level")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "LevelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Droosy_DAL.Entities.AppUser", "Teacher")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "TeacherId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -394,24 +1325,103 @@ namespace Droosy_DAL.Migrations
                 {
                     b.HasOne("Droosy_DAL.Entities.Course", "Course")
                         .WithMany("Units")
-                        .HasForeignKey("CourseId")
+                        .HasForeignKey("VisitorId", "CourseId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Course");
                 });
 
-            modelBuilder.Entity("Droosy_DAL.Entities.GroupStudent", b =>
+            modelBuilder.Entity("Droosy_DAL.Entities.Exam", b =>
                 {
-                    b.HasOne("Droosy_DAL.Entities.StudyGroup", "Group")
-                        .WithMany("Students")
-                        .HasForeignKey("GroupId")
+                    b.HasOne("Droosy_DAL.Entities.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "CourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.ExamAnswer", b =>
+                {
+                    b.HasOne("Droosy_DAL.Entities.ExamAttempt", "Attempt")
+                        .WithMany("Answers")
+                        .HasForeignKey("VisitorId", "AttemptId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Droosy_DAL.Entities.ExamChoice", "Choice")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "ChoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Droosy_DAL.Entities.ExamQuestion", "Question")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "QuestionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Attempt");
+
+                    b.Navigation("Choice");
+
+                    b.Navigation("Question");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.ExamAttempt", b =>
+                {
+                    b.HasOne("Droosy_DAL.Entities.Exam", "Exam")
+                        .WithMany("Attempts")
+                        .HasForeignKey("VisitorId", "ExamId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Droosy_DAL.Entities.AppUser", "Student")
                         .WithMany()
-                        .HasForeignKey("StudentId")
+                        .HasForeignKey("VisitorId", "StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Exam");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.ExamChoice", b =>
+                {
+                    b.HasOne("Droosy_DAL.Entities.ExamQuestion", "Question")
+                        .WithMany("Choices")
+                        .HasForeignKey("VisitorId", "QuestionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Question");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.ExamQuestion", b =>
+                {
+                    b.HasOne("Droosy_DAL.Entities.Exam", "Exam")
+                        .WithMany("Questions")
+                        .HasForeignKey("VisitorId", "ExamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Exam");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.GroupStudent", b =>
+                {
+                    b.HasOne("Droosy_DAL.Entities.StudyGroup", "Group")
+                        .WithMany("Students")
+                        .HasForeignKey("VisitorId", "GroupId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Droosy_DAL.Entities.AppUser", "Student")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "StudentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -424,24 +1434,73 @@ namespace Droosy_DAL.Migrations
                 {
                     b.HasOne("Droosy_DAL.Entities.CourseUnit", "Unit")
                         .WithMany("Lessons")
-                        .HasForeignKey("UnitId")
+                        .HasForeignKey("VisitorId", "UnitId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Unit");
                 });
 
-            modelBuilder.Entity("Droosy_DAL.Entities.ParentStudent", b =>
+            modelBuilder.Entity("Droosy_DAL.Entities.LessonProgress", b =>
                 {
-                    b.HasOne("Droosy_DAL.Entities.AppUser", "Parent")
+                    b.HasOne("Droosy_DAL.Entities.Lesson", "Lesson")
                         .WithMany()
-                        .HasForeignKey("ParentId")
+                        .HasForeignKey("VisitorId", "LessonId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Droosy_DAL.Entities.AppUser", "Student")
                         .WithMany()
-                        .HasForeignKey("StudentId")
+                        .HasForeignKey("VisitorId", "StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Lesson");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.Message", b =>
+                {
+                    b.HasOne("Droosy_DAL.Entities.Conversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("VisitorId", "ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Droosy_DAL.Entities.AppUser", "Sender")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.Notification", b =>
+                {
+                    b.HasOne("Droosy_DAL.Entities.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.ParentStudent", b =>
+                {
+                    b.HasOne("Droosy_DAL.Entities.AppUser", "Parent")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "ParentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Droosy_DAL.Entities.AppUser", "Student")
+                        .WithMany()
+                        .HasForeignKey("VisitorId", "StudentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -454,13 +1513,13 @@ namespace Droosy_DAL.Migrations
                 {
                     b.HasOne("Droosy_DAL.Entities.AppUser", "RecordedByUser")
                         .WithMany()
-                        .HasForeignKey("RecordedByUserId")
+                        .HasForeignKey("VisitorId", "RecordedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Droosy_DAL.Entities.Subscription", "Subscription")
                         .WithMany("Payments")
-                        .HasForeignKey("SubscriptionId")
+                        .HasForeignKey("VisitorId", "SubscriptionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -473,7 +1532,7 @@ namespace Droosy_DAL.Migrations
                 {
                     b.HasOne("Droosy_DAL.Entities.Course", "Course")
                         .WithMany()
-                        .HasForeignKey("CourseId")
+                        .HasForeignKey("VisitorId", "CourseId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -484,19 +1543,34 @@ namespace Droosy_DAL.Migrations
                 {
                     b.HasOne("Droosy_DAL.Entities.Course", "Course")
                         .WithMany()
-                        .HasForeignKey("CourseId")
+                        .HasForeignKey("VisitorId", "CourseId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Droosy_DAL.Entities.AppUser", "Student")
                         .WithMany()
-                        .HasForeignKey("StudentId")
+                        .HasForeignKey("VisitorId", "StudentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Course");
 
                     b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.Assignment", b =>
+                {
+                    b.Navigation("Submissions");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.ClassSession", b =>
+                {
+                    b.Navigation("Attendances");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.Conversation", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("Droosy_DAL.Entities.Course", b =>
@@ -507,6 +1581,23 @@ namespace Droosy_DAL.Migrations
             modelBuilder.Entity("Droosy_DAL.Entities.CourseUnit", b =>
                 {
                     b.Navigation("Lessons");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.Exam", b =>
+                {
+                    b.Navigation("Attempts");
+
+                    b.Navigation("Questions");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.ExamAttempt", b =>
+                {
+                    b.Navigation("Answers");
+                });
+
+            modelBuilder.Entity("Droosy_DAL.Entities.ExamQuestion", b =>
+                {
+                    b.Navigation("Choices");
                 });
 
             modelBuilder.Entity("Droosy_DAL.Entities.StudyGroup", b =>

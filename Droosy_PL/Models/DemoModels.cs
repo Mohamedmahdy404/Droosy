@@ -9,6 +9,26 @@ public class DemoPage {
  public List<StudyGroup> Groups {get;set;}=[];
  public List<Subscription> Subscriptions {get;set;}=[];
  public List<ActivationCode> Codes {get;set;}=[];
+ public List<ClassSession> Sessions {get;set;}=[];
+ public List<LessonProgress> ProgressRows {get;set;}=[];
+ public DateOnly? From {get;set;}
+ public DateOnly? To {get;set;}
+ public ClassSession? SelectedSession {get;set;}
+ public LessonProgress? CurrentProgress {get;set;}
+ public List<Assignment> Assignments {get;set;}=[];
+ public List<AssignmentSubmission> Submissions {get;set;}=[];
+ public List<Exam> Exams {get;set;}=[];
+ public List<ExamAttempt> Attempts {get;set;}=[];
+ public List<Conversation> Conversations {get;set;}=[];
+ public List<Notification> Notifications {get;set;}=[];
+ public List<Announcement> Announcements {get;set;}=[];
+ public List<AttentionItem> Attention {get;set;}=[];
+ public DateTime WeekFromUtc {get;set;}
+ public DateTime WeekToUtc {get;set;}
+ public int UnreadMessages=>Conversations.Sum(c=>c.Messages.Count(m=>m.SenderId!=Account?.Id&&m.ReadAtUtc==null));
+ public int PendingAssignments=>Submissions.Count(s=>NeedsReview(s));
+ public int PendingExams=>Attempts.Count(a=>a.SubmittedAtUtc!=null&&a.PublishedAtUtc==null);
+ public static bool NeedsReview(AssignmentSubmission s)=>s.Status==SubmissionStatus.Submitted||(s.Status==SubmissionStatus.Graded&&(!s.PublishedAtUtc.HasValue||s.Score!=s.PublishedScore||s.Feedback!=s.PublishedFeedback));
  public Lesson? Lesson {get;set;}
  public bool CanOpen {get;set;}
  public string Section {get;set;}="home";
@@ -28,3 +48,4 @@ public class EditLessonModel {
  public bool IsPreview {get;set;}
  public DateTime? PublishAtLocal {get;set;}
 }
+

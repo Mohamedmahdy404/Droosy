@@ -1,0 +1,9 @@
+@model DemoPage
+<div class="feature-tabs"><a class="selected" href="/Demo/Assignments">الواجبات</a><a href="/Demo/Exams">الاختبارات</a></div>
+<div class="coachmark" data-hint="assignments" role="note"><button type="button" data-dismiss aria-label="إغلاق الشرح">×</button>@(Model.IsTeacher?"افتح الواجب لمراجعة التسليمات. يمكنك حفظ التصحيح، ثم نشره للطالب وولي الأمر.":Model.IsParent?"تابع التسليم والتأخر والتصحيح المنشور. المسودة لا تُحسب تسليمًا.":"افتح الواجب، اكتب الحل أو أرفق صورة، ثم سلّم. يمكنك حفظ المسودة قبل الإرسال.")</div>
+@foreach(var assignment in Model.Assignments)
+{
+ var rows=Model.Submissions.Where(x=>x.AssignmentId==assignment.Id).ToList();var row=rows.SingleOrDefault(x=>x.StudentId==Model.Student?.Id);var late=assignment.DueAtUtc<DateTime.UtcNow&&(row==null||row.Status is SubmissionStatus.Draft or SubmissionStatus.Returned);
+ <a class="card task-card" href="/Demo/Assignment/@assignment.Id"><div class="card-top"><span class="tile-icon"><svg class="icon"><use href="/icons.svg#clipboard"></use></svg></span><span class="badge @(late?"amber":"neutral")">@(Model.IsTeacher?$"{rows.Count(x=>x.Status!=SubmissionStatus.Draft)} تسليمات":AssessmentService.SubmissionLabel(assignment,row,DateTime.UtcNow))</span></div><span class="eyebrow">@Model.Courses.Single(x=>x.Id==assignment.CourseId).Title</span><h2>@assignment.Title</h2><p>@assignment.Instructions</p><div class="task-meta"><span>التسليم: @DemoPage.DateAndTime(assignment.DueAtUtc)</span><strong>@assignment.MaxScore درجات</strong></div>@if(!Model.IsTeacher&&row?.PublishedAtUtc!=null){<div class="grade-peek">الدرجة المنشورة <strong>@row.PublishedScore / @assignment.MaxScore</strong></div>}<span class="text-button">@(Model.IsTeacher?"مراجعة التسليمات":"فتح الواجب") ←</span></a>
+}
+@if(!Model.Assignments.Any()){<section class="empty-state"><h2>لا توجد واجبات الآن</h2><p>ستظهر واجبات الكورس هنا.</p></section>}

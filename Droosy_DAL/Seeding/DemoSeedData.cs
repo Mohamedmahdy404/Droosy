@@ -2,7 +2,7 @@ using Droosy_DAL.Entities;
 namespace Droosy_DAL.Seeding;
 public static class DemoSeedData
 {
- public const string Version = "droosy-demo-v1-phases-1-3";
+ public const string Version = "droosy-demo-v2-isolated-visitors";
  public static readonly (string Id, string Name, DemoRole Role)[] Users = [
  ("T01", "أ. محمد عادل", DemoRole.Teacher), ("P01", "ولي أمر أحمد وياسين", DemoRole.Parent),
  ("S01", "أحمد محمود", DemoRole.Student), ("S02", "ياسين محمود", DemoRole.Student),
@@ -20,3 +20,4 @@ public static class DemoSeedData
  ["الزوايا المتتامة والمتكاملة", "مجموع زوايا المثلث", "محيط ومساحة الأشكال", "مراجعة الهندسة"],
  ["نتعرف على الزوايا المتتامة التي مجموعها ٩٠° والمتكاملة التي مجموعها ١٨٠°.", "نستخدم مجموع زوايا المثلث ١٨٠° لإيجاد الزاوية المجهولة.", "نميز بين المحيط والمساحة ونطبق قوانين المستطيل والمربع.", "نراجع الزوايا والمثلثات والمحيط والمساحة قبل التقييم."]) ];
 }
+

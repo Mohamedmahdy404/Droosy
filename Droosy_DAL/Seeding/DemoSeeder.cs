@@ -6,18 +6,31 @@ public class DemoSeeder(ApplicationDbContext db)
 {
  public async Task SeedAsync()
  {
-  var state = await db.DemoStates.SingleOrDefaultAsync();
-  if (state != null)
+  var state=await db.DemoStates.SingleOrDefaultAsync();
+  if(state?.SeedVersion==DemoSeedData.Version)return;
+  await using var transaction=db.Database.CurrentTransaction==null?await db.Database.BeginTransactionAsync():null;
+  bool fresh=state==null;
+  if(fresh)
   {
-   if (state.SeedVersion != DemoSeedData.Version) throw new InvalidOperationException("Demo seed version changed. A deliberate data upgrade is required; existing changes were preserved.");
-   return;
+   if(await db.Users.AnyAsync())throw new InvalidOperationException("Data exists without a seed marker; nothing was deleted.");
+   Populate(db,DateTime.UtcNow);
   }
-  if (await db.Users.AnyAsync()) throw new InvalidOperationException("Demo data exists without a seed marker. Seeding stopped without deleting data.");
-  var now = DateTime.UtcNow;
-  var cairo = TimeZoneInfo.FindSystemTimeZoneById("Egypt Standard Time");
-  var anchor = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(now, cairo));
-  var midnight = TimeZoneInfo.ConvertTimeToUtc(anchor.ToDateTime(TimeOnly.MinValue), cairo);
-  await using var transaction = await db.Database.BeginTransactionAsync();
+  else
+  {
+   if(state!.SeedVersion is not ("droosy-demo-v1-phases-1-3" or "droosy-demo-v1-phases-1-5"))throw new InvalidOperationException("Unknown seed version; existing data was preserved.");
+   var anchor=DateTime.SpecifyKind(state.SeededAtUtc,DateTimeKind.Utc);
+   if(state.SeedVersion=="droosy-demo-v1-phases-1-3")DemoPhase45Seed.Add(db,anchor);
+   DemoFeatureSeed.Add(db,anchor);state.SeedVersion=DemoSeedData.Version;
+  }
+  await db.SaveChangesAsync();
+  if(fresh)await ValidateAsync(db);
+  if(transaction!=null)await transaction.CommitAsync();
+ }
+ public static void Populate(ApplicationDbContext db,DateTime now)
+ {
+  var cairo=TimeZoneInfo.FindSystemTimeZoneById("Egypt Standard Time");
+  var anchor=DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(now,cairo));
+  var midnight=TimeZoneInfo.ConvertTimeToUtc(anchor.ToDateTime(TimeOnly.MinValue),cairo);
   db.Users.AddRange(DemoSeedData.Users.Select(x => new AppUser { Id=x.Id, DisplayName=x.Name, Role=x.Role }));
   db.PlatformSettings.Add(new() { Id="PLATFORM" });
   db.AcademicLevels.AddRange(new AcademicLevel { Id="LEVEL-2", Name="الصف الثاني الإعدادي", SortOrder=2 }, new AcademicLevel { Id="LEVEL-1", Name="الصف الأول الإعدادي", SortOrder=1 });
@@ -38,8 +51,23 @@ public class DemoSeeder(ApplicationDbContext db)
   }
   db.ActivationCodes.AddRange(new ActivationCode { Id="CODE-TRY", Code="DROOSY-TRY01", CourseId="ALG", Value=300, ExpiresAtUtc=midnight.AddDays(30) }, new ActivationCode { Id="CODE-OLD", Code="DROOSY-OLD01", CourseId="GEO", Value=250, ExpiresAtUtc=midnight.AddDays(-1) }, new ActivationCode { Id="CODE-USED", Code="DROOSY-USED01", CourseId="ALG", Value=300, ExpiresAtUtc=midnight.AddDays(30), RedeemedAtUtc=now.AddDays(-2), RedeemedByStudentId="S03" });
   db.DemoStates.Add(new() { Id="DEMO", SeedVersion=DemoSeedData.Version, SeededAtUtc=now, DemoAnchorDate=anchor, DataGenerationId=Guid.NewGuid() });
-  await db.SaveChangesAsync();
-  if (await db.Users.CountAsync()!=10 || await db.Lessons.CountAsync()!=8 || await db.Subscriptions.SumAsync(x=>x.Price)!=2200 || await db.Payments.SumAsync(x=>x.Amount)!=1450) throw new InvalidOperationException("Demo seed validation failed.");
-  await transaction.CommitAsync();
+  DemoPhase45Seed.Add(db, now);
+  DemoFeatureSeed.Add(db,now);
+ }
+ public static readonly IReadOnlyDictionary<string,int> ExpectedCounts=new Dictionary<string,int>
+ {
+  [nameof(AppUser)]=10,[nameof(ParentStudent)]=2,[nameof(PlatformSettings)]=1,[nameof(AcademicLevel)]=2,[nameof(Course)]=2,[nameof(CourseUnit)]=4,[nameof(Lesson)]=8,[nameof(StudyGroup)]=2,[nameof(GroupStudent)]=8,
+  [nameof(ClassSession)]=8,[nameof(Attendance)]=24,[nameof(LessonProgress)]=16,[nameof(Assignment)]=4,[nameof(AssignmentSubmission)]=10,[nameof(Exam)]=8,[nameof(ExamQuestion)]=40,[nameof(ExamChoice)]=160,[nameof(ExamAttempt)]=25,[nameof(ExamAnswer)]=122,
+  [nameof(Subscription)]=8,[nameof(Payment)]=6,[nameof(ActivationCode)]=3,[nameof(Conversation)]=3,[nameof(Message)]=9,[nameof(Notification)]=8,[nameof(Announcement)]=3,[nameof(AuditLog)]=4,[nameof(DemoState)]=1
+ };
+ public static async Task ValidateAsync(ApplicationDbContext db)
+ {
+  var counts=new Dictionary<string,IQueryable<int>>
+  {
+   [nameof(AppUser)]=db.Users.Select(x=>1),[nameof(ParentStudent)]=db.ParentStudents.Select(x=>1),[nameof(PlatformSettings)]=db.PlatformSettings.Select(x=>1),[nameof(AcademicLevel)]=db.AcademicLevels.Select(x=>1),[nameof(Course)]=db.Courses.Select(x=>1),[nameof(CourseUnit)]=db.CourseUnits.Select(x=>1),[nameof(Lesson)]=db.Lessons.Select(x=>1),[nameof(StudyGroup)]=db.StudyGroups.Select(x=>1),[nameof(GroupStudent)]=db.GroupStudents.Select(x=>1),
+   [nameof(ClassSession)]=db.ClassSessions.Select(x=>1),[nameof(Attendance)]=db.Attendances.Select(x=>1),[nameof(LessonProgress)]=db.LessonProgresses.Select(x=>1),[nameof(Assignment)]=db.Assignments.Select(x=>1),[nameof(AssignmentSubmission)]=db.AssignmentSubmissions.Select(x=>1),[nameof(Exam)]=db.Exams.Select(x=>1),[nameof(ExamQuestion)]=db.ExamQuestions.Select(x=>1),[nameof(ExamChoice)]=db.ExamChoices.Select(x=>1),[nameof(ExamAttempt)]=db.ExamAttempts.Select(x=>1),[nameof(ExamAnswer)]=db.ExamAnswers.Select(x=>1),
+   [nameof(Subscription)]=db.Subscriptions.Select(x=>1),[nameof(Payment)]=db.Payments.Select(x=>1),[nameof(ActivationCode)]=db.ActivationCodes.Select(x=>1),[nameof(Conversation)]=db.Conversations.Select(x=>1),[nameof(Message)]=db.Messages.Select(x=>1),[nameof(Notification)]=db.Notifications.Select(x=>1),[nameof(Announcement)]=db.Announcements.Select(x=>1),[nameof(AuditLog)]=db.AuditLogs.Select(x=>1),[nameof(DemoState)]=db.DemoStates.Select(x=>1)
+  };
+  foreach(var (name,query) in counts)if(await query.CountAsync()!=ExpectedCounts[name])throw new InvalidOperationException("Seed coverage failed: "+name);
  }
 }

@@ -1,0 +1,8 @@
+@model DemoPage
+<div class="coachmark" data-hint="messages" role="note"><button type="button" data-dismiss aria-label="إغلاق الشرح">×</button>كل محادثة مرتبطة بطالب ودرس أو واجب أو نتيجة. يمكنك بدء محادثة من صفحة السجل المقصود.</div>
+@foreach(var conversation in Model.Conversations.OrderByDescending(x=>x.Messages.Select(m=>(DateTime?)m.SentAtUtc).Max()))
+{
+ var last=conversation.Messages.OrderByDescending(x=>x.SentAtUtc).FirstOrDefault();var unread=conversation.Messages.Count(x=>x.SenderId!=Model.Account!.Id&&x.ReadAtUtc==null);
+ <a class="card conversation-row" href="/Demo/Chat/@conversation.Id"><span class="avatar">@(Model.IsTeacher?conversation.OtherUser.DisplayName[..1]:"م")</span><div><div class="conversation-title"><h2>@(Model.IsTeacher?conversation.OtherUser.DisplayName:"أ. محمد عادل")</h2>@if(unread>0){<span class="unread-count">@unread</span>}</div><span class="context-pill">@conversation.Student.DisplayName · @(conversation.ContextType==ConversationContext.Assignment?"واجب":conversation.ContextType==ConversationContext.Exam?"نتيجة":"درس")</span><p>@(last==null?"ابدأ الرسالة الأولى":string.IsNullOrWhiteSpace(last.Text)?"مرفق":last.Text)</p>@if(last!=null){<small>@DemoPage.DateAndTime(last.SentAtUtc)</small>}</div><span class="chevron">‹</span></a>
+}
+@if(!Model.Conversations.Any()){<section class="empty-state"><h2>نبدأ حوارًا مفيدًا</h2><p>افتح درسًا أو واجبًا أو نتيجة منشورة واضغط «راسل المدرس».</p><a class="button secondary full" href="/Demo/Assignments">عرض الواجبات</a></section>}

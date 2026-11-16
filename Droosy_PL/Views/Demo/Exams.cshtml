@@ -1,0 +1,8 @@
+@model DemoPage
+<div class="feature-tabs"><a href="/Demo/Assignments">الواجبات</a><a class="selected" href="/Demo/Exams">الاختبارات</a></div>
+<div class="coachmark" data-hint="exams" role="note"><button type="button" data-dismiss aria-label="إغلاق الشرح">×</button>@(Model.IsTeacher?"راجع المحاولات المسلّمة ثم انشر النتيجة. الدرجات محسوبة من الإجابات الفعلية.":"لكل اختبار محاولة واحدة. الوقت يبدأ بعد الضغط على بدء الاختبار، والنتيجة تظهر بعد نشرها.")</div>
+@foreach(var exam in Model.Exams.OrderByDescending(x=>x.OpensAtUtc))
+{
+ var attempt=Model.Attempts.SingleOrDefault(x=>x.ExamId==exam.Id&&x.StudentId==Model.Student?.Id);var status=exam.OpensAtUtc>DateTime.UtcNow?"قادم":attempt?.PublishedAtUtc!=null?"نتيجة منشورة":attempt?.SubmittedAtUtc!=null?"بانتظار النشر":attempt!=null?"قيد الحل":exam.ClosesAtUtc<=DateTime.UtcNow?"لم يدخل":"متاح الآن";
+ <a class="card task-card" href="/Demo/Exam/@exam.Id"><div class="card-top"><span class="tile-icon"><svg class="icon"><use href="/icons.svg#file"></use></svg></span><span class="badge @(status=="لم يدخل"?"amber":"")">@(Model.IsTeacher?Model.Attempts.Count(x=>x.ExamId==exam.Id)+" محاولات":status)</span></div><span class="eyebrow">@Model.Courses.Single(x=>x.Id==exam.CourseId).Title</span><h2>@exam.Title</h2><div class="exam-facts"><span>٥ أسئلة</span><span>@exam.DurationMinutes دقائق</span><span>@exam.Questions.Sum(x=>x.Points) درجات</span></div><p class="muted">@(exam.OpensAtUtc>DateTime.UtcNow?"يبدأ "+DemoPage.DateAndTime(exam.OpensAtUtc):"نهاية الإتاحة "+DemoPage.DateAndTime(exam.ClosesAtUtc))</p><span class="text-button">@(Model.IsTeacher?"المحاولات والمراجعة":"فتح الاختبار") ←</span></a>
+}

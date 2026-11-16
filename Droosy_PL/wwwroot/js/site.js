@@ -47,11 +47,13 @@
     status?.addEventListener('change', update);
     update();
     document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', () => {
+        if (form.matches?.('[data-exam-form]')) return;
+        form.addEventListener('submit', event => {
             if (!form.checkValidity()) return;
-            const button = form.querySelector('button[type="submit"]');
+            const button = event?.submitter || form.querySelector('button[type="submit"]');
             if (button) {
-                button.disabled = true;
+                if (button.getAttribute?.('aria-busy') === 'true') { event?.preventDefault(); return; }
+                if (!button.name) button.disabled = true;
                 button.setAttribute('aria-busy', 'true');
             }
         });
@@ -64,3 +66,4 @@
         });
     });
 })();
+

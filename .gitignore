@@ -361,3 +361,10 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Reproducible media rendering intermediates and verification logs
+.verification/assets/
+.verification/python-deps/
+.verification/*.log
+.verification/check-results.json
+App_Data/Uploads/
+.verification/upload-check/

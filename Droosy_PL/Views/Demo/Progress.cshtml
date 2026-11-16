@@ -1,0 +1,18 @@
+@model DemoPage
+@{ var student = Model.Student!; var courses = Model.Courses; var allLessons = courses.SelectMany(x => x.Units).SelectMany(x => x.Lessons).Where(LearningService.IsPublished).ToList(); var rows = Model.ProgressRows.Where(x => x.StudentId == student.Id).ToList(); var completed = allLessons.Count(l => rows.Any(p => p.LessonId == l.Id && p.IsCompleted)); var percent = allLessons.Count == 0 ? 0 : completed * 100 / allLessons.Count; }
+@if (Model.IsTeacher) { <form asp-antiforgery="false" method="get" asp-action="Progress" class="student-select card"><label for="progress-student">اختر الطالب</label><select name="studentId" id="progress-student">@foreach (var user in Model.Students) { <option value="@user.Id" selected="@(user.Id == student.Id)">@user.DisplayName</option> }</select><button class="button secondary full" type="submit">عرض التقدم</button></form> }
+<div class="coachmark" data-hint="progress" role="note"><button type="button" data-dismiss aria-label="إغلاق الشرح">×</button>نسبة الكورس هي عدد الدروس المكتملة من الدروس المنشورة. تقدم الفيديو يعتمد على الأجزاء التي شاهدها الطالب؛ النص يعرض حالته دون تخمين نسبة قراءة.</div>
+<section class="learning-summary"><div><span class="eyebrow">رحلة @student.DisplayName.Split(' ')[0]</span><h2>خطوة ورا خطوة، بنتقدم.</h2><p>@completed من @allLessons.Count دروس منشورة مكتملة</p></div><div class="progress-ring" style="--progress:@percent"><strong>@percent<small>٪</small></strong></div><p class="summary-footnote">هذا سجل للتعلم، وليس تقييمًا للفهم.</p></section>
+@foreach (var course in courses)
+{
+    <div class="section-title"><h2>@course.Title</h2><small>@course.Level.Name</small></div>
+    @foreach (var lesson in course.Units.OrderBy(x => x.SortOrder).SelectMany(x => x.Lessons.OrderBy(l => l.SortOrder)).Where(LearningService.IsPublished))
+    {
+        var row = rows.SingleOrDefault(x => x.LessonId == lesson.Id); var video = lesson.ContentType == LessonContentType.Video; var watched = Math.Min(100, (int)(ProgressService.WatchedSeconds(row) / Droosy_DAL.Seeding.DemoLessonContent.VideoDurationSeconds * 100));
+        <article class="card progress-lesson"><div class="card-top"><span class="tile-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#@(video ? "play" : "file")"></use></svg></span><span class="badge @(row?.IsCompleted == true ? "" : "neutral")">@TrackingDisplay.Progress(row)</span></div><h2>@lesson.Title</h2><p class="muted">@lesson.Unit.Title · @(video ? "شرح مرئي" : "درس نصي")</p>
+        @if (video) { <div class="learning-track" role="progressbar" aria-label="الأجزاء التي شاهدها الطالب" aria-valuenow="@watched" aria-valuemin="0" aria-valuemax="100"><span style="width:@watched%"></span></div><small>شاهد @watched٪ من الفيديو</small> }
+        @if (row != null) { <p class="last-activity">آخر نشاط: @DemoPage.DateAndTime(row.LastOpenedAtUtc)</p> }
+        <a class="text-button" href="/Demo/Lesson/@lesson.Id">@(Model.IsTeacher || Model.IsParent ? "عرض الدرس" : row == null ? "ابدأ الدرس" : "العودة للدرس") ←</a></article>
+    }
+}
+@if (!allLessons.Any()) { <section class="empty-state"><h2>لا توجد دروس منشورة بعد</h2><p>تظهر رحلة التعلم هنا بمجرد نشر دروس الكورس.</p></section> }

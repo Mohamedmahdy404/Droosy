@@ -1,0 +1,18 @@
+@model DemoPage
+@{ var published = Model.Sessions.Where(x => x.IsApproved).ToList(); var mine = published.SelectMany(x => x.Attendances).Where(x => x.StudentId == Model.Student?.Id).ToList(); }
+<div class="coachmark" data-hint="attendance" role="note"><button type="button" data-dismiss aria-label="إغلاق الشرح">×</button>@(Model.IsTeacher ? "افتح حصة منتهية لتسجيل الحضور. حفظ المسودة لا يظهر للأهل؛ زر اعتماد الحضور ينشر السجل." : "هنا الحصص المعتمدة فقط. افتح أي حصة لمعرفة تفاصيل حضور ابنك، ويمكنك تحديد فترة زمنية.")</div>
+@if (!Model.IsTeacher)
+{
+    <div class="attendance-overview"><span class="eyebrow">متابعة @Model.Student!.DisplayName.Split(' ')[0]</span><h2>كل حصة، صورتها واضحة.</h2><p>نسجل حضور الحصة منفصلًا عن مشاهدة الدروس.</p></div>
+    <div class="attendance-stats">@foreach (var status in Enum.GetValues<AttendanceStatus>()) { <div class="@TrackingDisplay.Tone(status)"><strong>@mine.Count(x => x.PublishedStatus == status)</strong><span>@TrackingDisplay.Status(status)</span></div> }</div>
+}
+<form asp-antiforgery="false" method="get" asp-action="Attendance" class="date-filter card"><div asp-validation-summary="All" class="validation" role="alert"></div><div class="date-fields"><label>من تاريخ<input type="date" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" /></label><label>إلى تاريخ<input type="date" name="to" value="@Model.To?.ToString("yyyy-MM-dd")" /></label></div><div class="filter-actions"><button class="button" type="submit">عرض الفترة</button><a href="/Demo/Attendance">عرض الكل</a></div></form>
+<div class="section-title"><h2>@(Model.IsTeacher ? "حصص مجموعاتك" : "سجل الحضور")</h2><small>@Model.Sessions.Count حصص</small></div>
+@foreach (var session in Model.Sessions)
+{
+    var future = session.EndsAtUtc > DateTime.UtcNow;
+    var row = session.Attendances.SingleOrDefault(x => x.StudentId == Model.Student?.Id);
+    var pending = session.IsApproved && session.Attendances.Any(x => x.Status != x.PublishedStatus || x.Note != x.PublishedNote);
+    <a class="session-card card" href="/Demo/Session/@session.Id"><div class="session-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#calendar"></use></svg></div><div class="session-info"><h2>@session.Title</h2><p>@session.Group.Name</p><time>@DemoPage.DateAndTime(session.StartsAtUtc)</time><small>بتوقيت القاهرة</small></div><span class="badge @(Model.IsTeacher ? (!session.IsApproved ? "amber" : "") : TrackingDisplay.Tone(row?.PublishedStatus))">@(Model.IsTeacher ? future ? "قادمة" : pending ? "تعديل غير معتمد" : session.IsApproved ? "معتمدة" : "مسودة" : TrackingDisplay.Status(row?.PublishedStatus))</span><span class="chevron">‹</span></a>
+}
+@if (!Model.Sessions.Any()) { <section class="empty-state"><h2>لا توجد حصص في هذه الفترة</h2><p>جرّب تغيير الفترة أو عرض كل الحصص. السجلات غير المعتمدة لا تظهر هنا للأهل.</p><a class="text-button" href="/Demo/Attendance">عرض كل الحصص ←</a></section> }
