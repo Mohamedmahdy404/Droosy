@@ -14,6 +14,7 @@ public static class FinalFixture
   var teacher=role=="Teacher";var parent=role=="Parent";var account=users.Single(x=>x.Id==(teacher?"T01":parent?"P01":student));var selected=users.Single(x=>x.Id==student);
   var memberships=groups.Where(g=>g.Students.Any(s=>s.StudentId==student)).ToList();
   var p=new DemoPage{Account=account,Student=selected,Students=teacher?users.Where(x=>x.Role==DemoRole.Student).ToList():parent?users.Where(x=>x.Id is "S01" or "S02").ToList():[selected],Courses=teacher?courses:courses.Where(c=>memberships.Any(g=>g.CourseId==c.Id)).ToList(),Groups=teacher?groups:memberships,Section=section,Title=section,Subtitle="رحلة تعليمية مترابطة"};
+  p.Title=section switch {"home"=>teacher?"أستاذ محمد":parent?"متابعة "+selected.DisplayName:"أهلًا "+selected.DisplayName,"subscriptions"=>"الاشتراكات","courses"=>"الكورسات","groups"=>"المجموعات","more"=>"المزيد",_=>section};
   p.Subscriptions=db.ChangeTracker.Entries<Subscription>().Select(x=>x.Entity).Where(x=>teacher||x.StudentId==student).ToList();p.Codes=db.ChangeTracker.Entries<ActivationCode>().Select(x=>x.Entity).ToList();
   p.Sessions=db.ChangeTracker.Entries<ClassSession>().Select(x=>x.Entity).Where(x=>teacher||(x.IsApproved&&memberships.Any(g=>g.Id==x.GroupId))).OrderByDescending(x=>x.StartsAtUtc).ToList();
   p.ProgressRows=db.ChangeTracker.Entries<LessonProgress>().Select(x=>x.Entity).Where(x=>teacher||x.StudentId==student).ToList();

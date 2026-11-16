@@ -1,2 +1,0 @@
-@model DemoPage
-@{var page=Model as DemoPage??ViewData["Page"] as DemoPage;}

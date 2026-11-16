@@ -21,6 +21,7 @@ else
         else { <div class="coachmark" data-hint="complete" role="note"><button type="button" data-dismiss aria-label="إغلاق الشرح">×</button>بعد قراءة الشرح ومراجعة المثال، اضغط «أكملت الدرس». تُحفظ الحالة وتظهر عند ولي الأمر.</div><form asp-antiforgery="false" asp-action="CompleteText" asp-route-id="@lesson.Id" method="post"><button type="submit" class="button full">أكملت الدرس ✓</button></form> }
     }
     @if (Model.IsParent || Model.IsTeacher) { <div class="stage-note"><span>ⓘ</span><p>أنت تعرض المحتوى للمتابعة. فتح الدرس أو تشغيله هنا لا يغير تقدم الطالب.</p></div> }
+    @if (!Model.IsTeacher) { <form asp-antiforgery="false" asp-action="BeginChat" method="post"><input type="hidden" name="contextType" value="Lesson"/><input type="hidden" name="contextId" value="@lesson.Id"/><button type="submit" class="button secondary full">راسل المدرس بخصوص الدرس</button></form> }
     @if (Model.IsTeacher) { <a class="button secondary full" href="/Demo/Edit/@lesson.Id">تعديل الدرس ✎</a> }
 }
 @section Scripts { @if (studentView && video && Model.CanOpen) { <script src="~/js/lesson-player.js" asp-append-version="true" defer></script> } }

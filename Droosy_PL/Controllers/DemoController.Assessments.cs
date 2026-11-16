@@ -105,6 +105,7 @@ public partial class DemoController
  [HttpPost]
  public async Task<IActionResult> SaveExam(string id,string intent)
  {
+  if(intent is not ("save" or "submit"))return BadRequest();
   var page=await Page();if(page.IsTeacher||page.IsParent||page.Account==null)return BadRequest();
   var attempt=await db.ExamAttempts.Include(x=>x.Answers).Include(x=>x.Exam).ThenInclude(x=>x.Questions).ThenInclude(x=>x.Choices).SingleOrDefaultAsync(x=>x.ExamId==id&&x.StudentId==page.Account.Id);
   if(attempt==null)return NotFound();

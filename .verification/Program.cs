@@ -80,12 +80,16 @@ using(var scope=app.Services.CreateScope()) {
  var parentLesson=factory.Fixture("Parent");parentLesson.Lesson=parentLesson.Courses.First().Units.First().Lessons.Last();parentLesson.CanOpen=true;checks.Add(("parent read only lesson","Lesson",parentLesson,"لا يغير تقدم الطالب"));
  var approved=TrackingChecks.Editor(factory.Fixture(),"A2");approved.History=[new AuditLog{Action="ApproveAttendance",CreatedAtUtc=DateTime.UtcNow,BeforeJson="[]",AfterJson=Droosy_BL.AttendanceService.Snapshot(approved.Session.Attendances,true)}];checks.Add(("approved register history","AttendanceEditor",approved,"سجل الاعتماد والتصحيح"));
  var historical=factory.Fixture("Student","courses","S07");historical.Lesson=historical.Courses.First().Units.Last().Lessons.First();historical.CanOpen=false;historical.CurrentProgress=historical.ProgressRows.Single(x=>x.LessonId==historical.Lesson.Id);checks.Add(("expired retained history","Lesson",historical,"تقدمك السابق محفوظ"));
+ checks.AddRange(FeatureRenderCases.Create());
  foreach(var check in checks) {
   var http=new DefaultHttpContext { RequestServices=scope.ServiceProvider };http.Request.Scheme="http";http.Request.Host=new HostString("localhost");
   var route=new Microsoft.AspNetCore.Routing.RouteData();route.Routers.Add(new Microsoft.AspNetCore.Routing.RouteCollection());route.Values["controller"]="Demo";route.Values["action"]=check.View=="Welcome"?"Index":check.View;
   var action=new ActionContext(http,route,new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor());
   var found=engine.GetView(null,"/Views/Demo/"+check.View+".cshtml",true);if(!found.Success)throw new Exception("View not found "+check.View);
   var data=new ViewDataDictionary(new EmptyModelMetadataProvider(),new ModelStateDictionary()){Model=check.Model};if(check.View=="Edit" || check.View=="AttendanceEditor")data["Page"]=factory.Fixture();
+  if(check.Model is AssignmentPageModel ap)data["Page"]=ap.Page;
+  if(check.Model is ExamPageModel ep)data["Page"]=ep.Page;
+  if(check.Model is ChatPageModel cp)data["Page"]=cp.Page;
   var temp=new TempDataDictionary(http,scope.ServiceProvider.GetRequiredService<ITempDataProvider>());
   using var output=new StringWriter();var context=new ViewContext(action,found.View,data,temp,output,new HtmlHelperOptions());await found.View.RenderAsync(context);
   var html=System.Net.WebUtility.HtmlDecode(output.ToString());if(!html.Contains(check.Expected))throw new Exception("Missing text "+check.Name+": "+check.Expected);
@@ -96,6 +100,8 @@ using(var scope=app.Services.CreateScope()) {
   if(check.Name=="future register" && html.Contains("name=\"intent\""))throw new Exception("Future register editable");
   if(check.Name=="parent read only lesson" && (html.Contains("data-lesson-video") || html.Contains("/Demo/CompleteText")))throw new Exception("Parent can change progress");
   if(check.Name=="locked lesson" && html.Contains("/Demo/Material/"))throw new Exception("Locked resource exposed in HTML");
+  if(check.Name=="unpublished exam"&&(html.Contains("answer-review")||html.Contains("published-grade")))throw new Exception("Unpublished exam exposed");
+  if(check.Name=="ongoing timed exam"&&(!html.Contains("Z\" data-server-now")||html.Contains("answer-review")))throw new Exception("Exam deadline or answer visibility invalid");
   Console.WriteLine("RENDER_PASS: "+check.Name);
  }
 }

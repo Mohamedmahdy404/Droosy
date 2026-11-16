@@ -368,3 +368,5 @@ FodyWeavers.xsd
 .verification/check-results.json
 App_Data/Uploads/
 .verification/upload-check/
+
+.verification/isolated/
