@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const script = fs.readFileSync('Droosy_PL/wwwroot/js/site.js', 'utf8');
-function fixture(seen = false, storageFails = false) {
+function fixture(seen = false, storageFails = false, generation = 'generation-1') {
     const callbacks = {};
     const timers = [];
     const input = {};
@@ -16,14 +16,18 @@ function fixture(seen = false, storageFails = false) {
     const document = {activeElement:null,
         querySelectorAll:selector=>selector==='[data-hint]'?[hint]:selector==='[data-dismiss]'?[close]:selector==='form'?[form]:[submit],
         querySelector:selector=>selector==='[data-show-hints]'?help:selector==='#publication-status'?status:selector==='#schedule-field'?schedule:null};
+    const query = document.querySelector;
+    document.querySelector = selector => selector === 'meta[name="droosy-generation"]' ? {content:generation} : query(selector);
+    let storedKey;
     const context = {document, location:{pathname:'/Demo/Edit/ALG-L04',search:''},
-        sessionStorage:{getItem:()=>{if(storageFails)throw Error('blocked');return seen?'seen':null},setItem:()=>{}},
+        sessionStorage:{getItem:()=>{if(storageFails)throw Error('blocked');return seen?'seen':null},setItem:key=>{storedKey=key}},
         setTimeout:(fn,ms)=>{timers.push({fn,ms});return timers.length},clearTimeout:()=>{},
         window:{addEventListener:(name,fn)=>callbacks[name]=fn}};
     vm.runInNewContext(script,context);
-    return {callbacks,timers,hint,status,schedule,input,submit,document};
+    return {callbacks,timers,hint,status,schedule,input,submit,document,storedKey};
 }
 let page=fixture();
+assert.notEqual(page.storedKey,fixture(false,false,'generation-2').storedKey,'Reset must use fresh hint state');
 assert.equal(page.hint.hidden,false);
 assert.equal(page.timers[0].ms,11000);
 page.timers[0].fn();

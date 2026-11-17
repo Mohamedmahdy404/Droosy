@@ -1,6 +1,7 @@
 (() => {
     'use strict';
-    const key = 'droosy-hints:' + location.pathname + location.search;
+    const generation = document.querySelector('meta[name="droosy-generation"]')?.content || '';
+    const key = 'droosy-hints:' + generation + ':' + location.pathname + location.search;
     const hints = [...document.querySelectorAll('[data-hint]')];
     let timer;
     function hide() {

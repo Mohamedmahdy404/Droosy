@@ -1,0 +1,11 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const events={},cancelEvents={},closeEvents={};let shown=0,closed=0,focus='';
+const cancel={addEventListener:(name,fn)=>cancelEvents[name]=fn,focus:()=>focus='cancel'};
+const x={addEventListener:(name,fn)=>closeEvents[name]=fn};
+const dialog={showModal:()=>shown++,close:()=>{closed++;events.close()},querySelector:()=>cancel,querySelectorAll:()=>[cancel,x],addEventListener:(name,fn)=>events[name]=fn};
+const open={addEventListener:(name,fn)=>events.open=fn,focus:()=>focus='open'};
+vm.runInNewContext(fs.readFileSync('Droosy_PL/wwwroot/js/reset-demo.js','utf8'),{document:{querySelector:s=>s==='[data-open-reset]'?open:dialog}});
+assert.equal(shown,0);events.open();assert.equal(shown,1);assert.equal(focus,'cancel');
+cancelEvents.click();assert.equal(closed,1);assert.equal(focus,'open');
+events.open();closeEvents.click();assert.equal(closed,2);assert.equal(focus,'open');
+console.log('RESET_UI_PASS: opens on request, focuses cancel, cancel and X close without submitting');

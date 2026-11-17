@@ -32,6 +32,7 @@ TrackingChecks.Run();
 VisitorProbe.Run();
 FeatureChecks.Run();
 await UploadChecks.RunAsync();
+await ResetChecks.RunAsync();
 var builder=WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<DemoScope>();
 builder.Services.AddControllersWithViews().AddApplicationPart(typeof(DemoController).Assembly);
@@ -83,7 +84,9 @@ using(var scope=app.Services.CreateScope()) {
  checks.AddRange(FeatureRenderCases.Create());
  foreach(var check in checks) {
   var http=new DefaultHttpContext { RequestServices=scope.ServiceProvider };http.Request.Scheme="http";http.Request.Host=new HostString("localhost");
-  var route=new Microsoft.AspNetCore.Routing.RouteData();route.Routers.Add(new Microsoft.AspNetCore.Routing.RouteCollection());route.Values["controller"]="Demo";route.Values["action"]=check.View=="Welcome"?"Index":check.View;
+  var route=new Microsoft.AspNetCore.Routing.RouteData();
+  route.Routers.Add(new Microsoft.AspNetCore.Routing.Route(new Microsoft.AspNetCore.Routing.RouteCollection(),"{controller}/{action}/{id?}",scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Routing.IInlineConstraintResolver>()));
+  route.Values["controller"]="Demo";route.Values["action"]=check.View=="Welcome"?"Index":check.View;
   var action=new ActionContext(http,route,new Microsoft.AspNetCore.Mvc.Abstractions.ActionDescriptor());
   var found=engine.GetView(null,"/Views/Demo/"+check.View+".cshtml",true);if(!found.Success)throw new Exception("View not found "+check.View);
   var data=new ViewDataDictionary(new EmptyModelMetadataProvider(),new ModelStateDictionary()){Model=check.Model};if(check.View=="Edit" || check.View=="AttendanceEditor")data["Page"]=factory.Fixture();
@@ -102,6 +105,15 @@ using(var scope=app.Services.CreateScope()) {
   if(check.Name=="locked lesson" && html.Contains("/Demo/Material/"))throw new Exception("Locked resource exposed in HTML");
   if(check.Name=="unpublished exam"&&(html.Contains("answer-review")||html.Contains("published-grade")))throw new Exception("Unpublished exam exposed");
   if(check.Name=="ongoing timed exam"&&(!html.Contains("Z\" data-server-now")||html.Contains("answer-review")))throw new Exception("Exam deadline or answer visibility invalid");
+  if(check.Name=="welcome")
+  {
+   if(!html.Contains("data-open-reset")||!html.Contains("data-reset-dialog")||!html.Contains("action=\"/Demo/ResetDemo\"")||!html.Contains("name=\"demoGeneration\""))
+   {
+    Console.WriteLine(string.Join("\n",System.Text.RegularExpressions.Regex.Matches(html,@"<(?:form|partial|input)[^>]*>").Select(m=>m.Value)));
+    throw new Exception("Visitor reset UI or generation missing");
+   }
+   if(html.Contains("<dialog open"))throw new Exception("Reset dialog opens without user choice");
+  }
   Console.WriteLine("RENDER_PASS: "+check.Name);
  }
 }

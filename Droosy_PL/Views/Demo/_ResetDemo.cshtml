@@ -1,0 +1,16 @@
+<section class="restart-card" aria-labelledby="restart-title">
+    <span class="restart-icon" aria-hidden="true">↻</span>
+    <div><h2 id="restart-title">تحب تجرّب من الأول؟</h2><p>ارجع للبيانات الأصلية وابدأ رحلة جديدة.</p></div>
+    <button type="button" class="button secondary full" data-open-reset>ابدأ التجربة من جديد</button>
+</section>
+<dialog class="restart-dialog" data-reset-dialog aria-labelledby="reset-title" aria-describedby="reset-description">
+    <div class="restart-dialog-heading"><span class="restart-icon" aria-hidden="true">↻</span><button type="button" class="restart-close" data-cancel-reset aria-label="إغلاق">×</button></div>
+    <h2 id="reset-title">نبدأ من جديد؟</h2>
+    <p id="reset-description">هنمسح تغييراتك ومرفقاتك في تجربة المدرس والطالب وولي الأمر، ونرجّع البيانات الأصلية. تجارب باقي الزوار مش هتتأثر.</p>
+    <p class="restart-warning">مش هتقدر ترجع التغييرات دي بعد المسح.</p>
+    <form asp-antiforgery="false" asp-controller="Demo" asp-action="ResetDemo" method="post">
+        <input type="hidden" name="confirmed" value="true"/>
+        <button type="submit" class="button full">امسح تغييراتي وابدأ من جديد</button>
+        <button type="button" class="text-button full" data-cancel-reset>كمّل تجربتي الحالية</button>
+    </form>
+</dialog>
