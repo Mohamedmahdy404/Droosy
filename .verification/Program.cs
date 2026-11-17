@@ -13,6 +13,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+if(args.Contains("--sql-exam")){await SqlExamProbe.RunAsync();return;}
+if(args.Contains("--exam-tracking")){await ExamPersistenceChecks.RunAsync();return;}
+if(args.Contains("--export-lessons")){File.WriteAllText(".verification/assets/lessons.json",System.Text.Json.JsonSerializer.Serialize(DemoLessonContent.Lessons));return;}
 if(args.Contains("--visitor-probe")){VisitorProbe.Run();FeatureChecks.Run();await UploadChecks.RunAsync();return;}
 var publicationCases = new[]
 {
@@ -33,6 +36,7 @@ VisitorProbe.Run();
 FeatureChecks.Run();
 await UploadChecks.RunAsync();
 await ResetChecks.RunAsync();
+await ExamPersistenceChecks.RunAsync();
 var builder=WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<DemoScope>();
 builder.Services.AddControllersWithViews().AddApplicationPart(typeof(DemoController).Assembly);
@@ -82,8 +86,11 @@ using(var scope=app.Services.CreateScope()) {
  var approved=TrackingChecks.Editor(factory.Fixture(),"A2");approved.History=[new AuditLog{Action="ApproveAttendance",CreatedAtUtc=DateTime.UtcNow,BeforeJson="[]",AfterJson=Droosy_BL.AttendanceService.Snapshot(approved.Session.Attendances,true)}];checks.Add(("approved register history","AttendanceEditor",approved,"سجل الاعتماد والتصحيح"));
  var historical=factory.Fixture("Student","courses","S07");historical.Lesson=historical.Courses.First().Units.Last().Lessons.First();historical.CanOpen=false;historical.CurrentProgress=historical.ProgressRows.Single(x=>x.LessonId==historical.Lesson.Id);checks.Add(("expired retained history","Lesson",historical,"تقدمك السابق محفوظ"));
  checks.AddRange(FeatureRenderCases.Create());
+ checks.Add(("english initial shell","Dashboard",factory.Fixture("Parent"),"favicon-32.png"));
+ checks.Add(("student more","Dashboard",factory.Fixture("Student","more"),"/Demo/Assignments"));
  foreach(var check in checks) {
   var http=new DefaultHttpContext { RequestServices=scope.ServiceProvider };http.Request.Scheme="http";http.Request.Host=new HostString("localhost");
+  if(check.Name=="english initial shell")http.Request.Headers.Cookie="droosy-language=en";
   var route=new Microsoft.AspNetCore.Routing.RouteData();
   route.Routers.Add(new Microsoft.AspNetCore.Routing.Route(new Microsoft.AspNetCore.Routing.RouteCollection(),"{controller}/{action}/{id?}",scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Routing.IInlineConstraintResolver>()));
   route.Values["controller"]="Demo";route.Values["action"]=check.View=="Welcome"?"Index":check.View;
@@ -96,8 +103,13 @@ using(var scope=app.Services.CreateScope()) {
   var temp=new TempDataDictionary(http,scope.ServiceProvider.GetRequiredService<ITempDataProvider>());
   using var output=new StringWriter();var context=new ViewContext(action,found.View,data,temp,output,new HtmlHelperOptions());await found.View.RenderAsync(context);
   var html=System.Net.WebUtility.HtmlDecode(output.ToString());if(!html.Contains(check.Expected))throw new Exception("Missing text "+check.Name+": "+check.Expected);
-  if(!html.Contains("width=device-width")||!html.Contains("dir=\"rtl\""))throw new Exception("Missing mobile metadata "+check.Name);
+  if(args.Contains("--dump-html")){Directory.CreateDirectory(".verification/translation-html");File.WriteAllText(".verification/translation-html/"+check.Name.Replace(' ','-')+".html",output.ToString());}
+  if(!html.Contains("width=device-width")||!html.Contains(check.Name=="english initial shell"?"dir=\"ltr\"":"dir=\"rtl\""))throw new Exception("Missing mobile metadata "+check.Name);
+  if(!html.Contains("data-language-option")||!html.Contains("rel=\"icon\""))throw new Exception("Language control or favicon missing");
+  if(check.Name=="english initial shell"&&!html.Contains("lang=\"en\""))throw new Exception("English cookie was not respected");
+  if(check.Name=="student more"&&html.Contains("/Demo/Progress"))throw new Exception("Student more menu exposes learning journey");
   if(check.Name=="student course"&&html.Contains("مراجعة الجبر"))throw new Exception("Draft exposed");
+  if(check.Name=="student home"&&(html.Contains("/Demo/Progress")||html.Contains("شاهد رحلة التعلم")))throw new Exception("Student learning journey flow still visible");
   if(check.Name=="lesson editor"&&(!html.Contains("bottom-nav")||!html.Contains("data-show-hints")||!html.Contains("/Demo/Course/ALG")))throw new Exception("Editor navigation or help missing");
   if(check.Name=="parent attendance" && html.Contains("حصة الجبر · A3"))throw new Exception("Draft session leaked to parent");
   if(check.Name=="future register" && html.Contains("name=\"intent\""))throw new Exception("Future register editable");
@@ -121,6 +133,10 @@ Console.WriteLine("ALL_RENDER_CHECKS_PASSED");
 if (args.Contains("--serve")) { app.Urls.Add("http://127.0.0.1:5258"); app.Run(); }
 
 public class PreviewController:Controller {
+ public IActionResult Feature(string name="Parent Weekly"){
+  var item=FeatureRenderCases.Create().Single(x=>x.Name==name);if(item.Model is AssignmentPageModel a)ViewData["Page"]=a.Page;if(item.Model is ExamPageModel e)ViewData["Page"]=e.Page;if(item.Model is ChatPageModel c)ViewData["Page"]=c.Page;
+  return View("/Views/Demo/"+item.View+".cshtml",item.Model);
+ }
  public DemoPage Fixture(string role="Teacher",string section="home",string student="S01")=>FinalFixture.Create(role,section,student);
  public IActionResult Index()=>View("/Views/Demo/Welcome.cshtml",Fixture());
  public IActionResult Screen(string role="Teacher",string section="home",string student="S01")=>View("/Views/Demo/Dashboard.cshtml",Fixture(role,section,student));

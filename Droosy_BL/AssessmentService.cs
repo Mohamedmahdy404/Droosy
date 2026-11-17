@@ -41,7 +41,11 @@ public class AssessmentService(ApplicationDbContext db,NotificationService notif
   foreach(var (questionId,choiceId) in selected)
   {
    var row=attempt.Answers.SingleOrDefault(x=>x.QuestionId==questionId);
-   if(row==null){row=new ExamAnswer{Id=attempt.Id+"-"+questionId,QuestionId=questionId};attempt.Answers.Add(row);}
+   if(row==null)
+   {
+    row=new ExamAnswer{VisitorId=db.VisitorId,Id=attempt.Id+"-"+questionId,AttemptId=attempt.Id,QuestionId=questionId,ChoiceId=choiceId};
+    db.ExamAnswers.Add(row);
+   }
    row.ChoiceId=choiceId;
   }
   if(FinalizeAttempt(attempt,now,submit))await notifications.AddAsync("T01",attempt.StudentId,"محاولة اختبار تنتظر المراجعة","/Demo/Exam/"+attempt.ExamId+"?studentId="+attempt.StudentId,"SubmitExam:"+attempt.Id);await db.SaveChangesAsync();return null;

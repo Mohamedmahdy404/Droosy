@@ -1,0 +1,5 @@
+@{var useEnglish=Context.Request.Cookies["droosy-language"]=="en";}
+<div class="language-toggle" role="group" aria-label="لغة العرض" translate="no">
+    <button type="button" data-language-option="ar" class="@(!useEnglish?"selected":"")" aria-pressed="@(!useEnglish?"true":"false")" aria-label="العربية">عربي</button>
+    <button type="button" data-language-option="en" class="@(useEnglish?"selected":"")" aria-pressed="@(useEnglish?"true":"false")" aria-label="English">EN</button>
+</div>

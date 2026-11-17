@@ -85,6 +85,7 @@ public partial class DemoController
     {
         var page = await Page("progress");
         if (page.Account == null) return RedirectToAction(nameof(Index));
+        if (!page.IsTeacher && !page.IsParent) return RedirectToAction(nameof(Dashboard), new { section = "courses" });
         if (page.IsTeacher)
         {
             page.Student = page.Students.SingleOrDefault(x => x.Id == studentId) ?? page.Students.First();
@@ -104,17 +105,18 @@ public partial class DemoController
         return (page, lesson);
     }
 
-    public async Task<IActionResult> Material(string id, string kind = "pdf", bool download = false)
+    public async Task<IActionResult> Material(string id, string kind = "pdf", bool download = false, string? lang = null)
     {
         var (page, lesson) = await AccessibleLesson(id);
         if (page.Account == null) return RedirectToAction(nameof(Index));
         if (lesson == null) return NotFound();
-        if (kind is not ("pdf" or "poster") && (kind != "video" || lesson.ContentType != LessonContentType.Video)) return NotFound();
-        var extension = kind == "pdf" ? ".pdf" : kind == "poster" ? ".png" : ".mp4";
+        if (kind is not ("pdf" or "poster") && (kind is not ("video" or "captions") || lesson.ContentType != LessonContentType.Video)) return NotFound();
+        var english = (lang ?? Request.Cookies["droosy-language"]) == "en";
+        var extension = kind == "pdf" ? (english ? ".en.pdf" : ".pdf") : kind == "poster" ? ".png" : kind == "captions" ? ".en.vtt" : ".mp4";
         var path = Path.Combine(environment.ContentRootPath, "App_Data", "Lessons", lesson.Id + extension);
         if (!System.IO.File.Exists(path)) return NotFound();
         if (download && kind == "pdf") return PhysicalFile(path, "application/pdf", lesson.Title + extension);
-        return PhysicalFile(path, kind == "pdf" ? "application/pdf" : kind == "poster" ? "image/png" : "video/mp4", enableRangeProcessing: true);
+        return PhysicalFile(path, kind == "pdf" ? "application/pdf" : kind == "poster" ? "image/png" : kind == "captions" ? "text/vtt; charset=utf-8" : "video/mp4", enableRangeProcessing: true);
     }
 
     [HttpPost]

@@ -1,8 +1,8 @@
 (() => {
     'use strict';
     const generation = document.querySelector('meta[name="droosy-generation"]')?.content || '';
-    const key = 'droosy-hints:' + generation + ':' + location.pathname + location.search;
     const hints = [...document.querySelectorAll('[data-hint]')];
+    const key = 'droosy-hints:' + generation + ':' + location.pathname + location.search + ':' + hints.map(hint => hint.dataset?.hint || '').join('|');
     let timer;
     function hide() {
         hints.forEach(hint => {
@@ -24,11 +24,19 @@
     hints.forEach(hint => { hint.hidden = seen; });
     if (!seen) show();
     document.querySelector('[data-show-hints]')?.addEventListener('click', show);
+    document.querySelectorAll('[data-show-hint]').forEach(button => {
+        button.addEventListener('click', () => {
+            clearTimeout(timer);
+            hints.filter(hint => hint.dataset.hint === button.dataset.showHint).forEach(hint => { hint.hidden = false; });
+            timer = setTimeout(hide, 11000);
+        });
+    });
     document.querySelectorAll('[data-dismiss]').forEach(button => {
         button.addEventListener('click', () => {
             if (button.parentElement.contains(document.activeElement)) {
                 const next = button.parentElement.parentElement.querySelector('a, button[type="submit"]');
-                (next || document.querySelector('[data-show-hints]'))?.focus({ preventScroll: true });
+                const explanation = document.querySelector('[data-show-hint="' + (button.parentElement.dataset?.hint || '') + '"]');
+                (next || explanation || document.querySelector('[data-show-hints]'))?.focus({ preventScroll: true });
             }
             button.parentElement.hidden = true;
         });

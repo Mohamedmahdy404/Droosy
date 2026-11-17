@@ -10,9 +10,9 @@
 }
 @if(row!=null&&row.Status!=SubmissionStatus.Draft)
 {
- <section class="card answer-card"><div class="card-top"><h2>حل @(page.IsTeacher?Model.SelectedStudent?.DisplayName:page.IsParent?page.Student!.DisplayName:"الطالب")</h2><span class="badge @(row.SubmittedAtUtc>work.DueAtUtc?"amber":"")">@(row.SubmittedAtUtc>work.DueAtUtc?"تسليم متأخر":"تم التسليم")</span></div><p class="answer-text">@row.AnswerText</p>@if(row.AttachmentPath!=null){<a class="attachment-link" href="/Demo/SubmissionAttachment/@row.Id" target="_blank" rel="noopener"><svg class="icon"><use href="/icons.svg#attach"></use></svg>@row.AttachmentName ↗</a>}<small class="muted">تاريخ التسليم: @DemoPage.DateAndTime(row.SubmittedAtUtc!.Value)</small></section>
- @if(row.Status==SubmissionStatus.Returned){<div class="return-card"><strong>الحل معاد للتعديل</strong><p>@row.ReturnReason</p></div>}
- @if(row.PublishedAtUtc!=null){<section class="card published-grade"><span class="eyebrow">التصحيح المنشور</span><strong>@row.PublishedScore <small>/ @work.MaxScore</small></strong><p>@row.PublishedFeedback</p><small>نُشر @DemoPage.DateAndTime(row.PublishedAtUtc.Value)</small></section>}
+ <section class="card answer-card"><div class="card-top"><h2>حل @(page.IsTeacher?Model.SelectedStudent?.DisplayName:page.IsParent?page.Student!.DisplayName:"الطالب")</h2><span class="badge @(row.SubmittedAtUtc>work.DueAtUtc?"amber":"")">@(row.SubmittedAtUtc>work.DueAtUtc?"تسليم متأخر":"تم التسليم")</span></div><p class="answer-text" data-translate-exact dir="auto">@row.AnswerText</p>@if(row.AttachmentPath!=null){<a class="attachment-link" href="/Demo/SubmissionAttachment/@row.Id" target="_blank" rel="noopener"><svg class="icon"><use href="/icons.svg#attach"></use></svg>@row.AttachmentName ↗</a>}<small class="muted">تاريخ التسليم: @DemoPage.DateAndTime(row.SubmittedAtUtc!.Value)</small></section>
+ @if(row.Status==SubmissionStatus.Returned){<div class="return-card"><strong>الحل معاد للتعديل</strong><p data-translate-exact>@row.ReturnReason</p></div>}
+ @if(row.PublishedAtUtc!=null){<section class="card published-grade"><span class="eyebrow">التصحيح المنشور</span><strong>@row.PublishedScore <small>/ @work.MaxScore</small></strong><p data-translate-exact>@row.PublishedFeedback</p><small>نُشر @DemoPage.DateAndTime(row.PublishedAtUtc.Value)</small></section>}
  else if(!page.IsTeacher&&row.Status!=SubmissionStatus.Returned){<div class="stage-note"><span>◷</span><p>التصحيح قيد المراجعة. ستظهر الدرجة والملاحظة بعد النشر.</p></div>}
 }
 @if(editable)

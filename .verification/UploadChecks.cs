@@ -23,6 +23,15 @@ public static class UploadChecks
   blocked=false;try{store.Resolve($"Uploads/{b}/secret.png");}catch(ArgumentException){blocked=true;}if(!blocked)throw new Exception("Other visitor attachment accessible");
   using var bad=new MemoryStream("plain text"u8.ToArray());blocked=false;try{await store.SaveAsync(new FormFile(bad,0,bad.Length,"file","bad.pdf"));}catch(ArgumentException){blocked=true;}if(!blocked)throw new Exception("Invalid file accepted");
   using var empty=new MemoryStream();if(await store.SaveAsync(new FormFile(empty,0,0,"file","empty.pdf"))!=null)throw new Exception("Empty upload accepted");
+  var boundary=new byte[UploadStore.ChatFileMaxBytes];png.AsSpan(0,8).CopyTo(boundary);
+  for(var n=0;n<5;n++){using var payload=new MemoryStream(boundary);await store.SaveAsync(new FormFile(payload,0,payload.Length,"file","chat.png"),chat:true);}
+  if(store.ChatUsedBytes()!=UploadStore.ChatQuotaBytes)throw new Exception("Shared chat quota accounting");
+  using(var payload=new MemoryStream(png))
+  {blocked=false;try{await store.SaveAsync(new FormFile(payload,0,payload.Length,"file","overflow.png"),chat:true);}catch(ArgumentException){blocked=true;}if(!blocked)throw new Exception("Chat exceeded shared 10 MB quota");}
+  using(var payload=new MemoryStream(new byte[UploadStore.ChatFileMaxBytes+1]))
+  {blocked=false;try{await store.SaveAsync(new FormFile(payload,0,payload.Length,"file","large.png"),chat:true);}catch(ArgumentException){blocked=true;}if(!blocked)throw new Exception("Chat accepted attachment above 2 MB");}
+  var otherStore=new UploadStore(new VerificationEnvironment(root),new DemoScope{VisitorId=b,GenerationId=scope.GenerationId});
+  if(otherStore.ChatUsedBytes()!=0)throw new Exception("Chat quota crossed visitor boundary");
   var originals=Path.Combine(root,"App_Data","Lessons");Directory.CreateDirectory(originals);var original=Path.Combine(originals,"original.pdf");await File.WriteAllTextAsync(original,"original");
   var other=Path.Combine(root,"App_Data","Uploads",b);Directory.CreateDirectory(other);await File.WriteAllTextAsync(Path.Combine(other,"keep.txt"),"other visitor");
   UploadStore.ClearVisitor(root,a);

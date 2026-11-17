@@ -26,6 +26,7 @@ public partial class DemoController
    ConversationContext.Lesson=>await db.Lessons.Where(x=>x.Id==conversation.ContextId).Select(x=>x.Title).SingleAsync(),
    ConversationContext.Assignment=>await db.Assignments.Where(x=>x.Id==conversation.ContextId).Select(x=>x.Title).SingleAsync(),
    _=>await db.Exams.Where(x=>x.Id==conversation.ContextId).Select(x=>x.Title).SingleAsync()};
+  ViewData["ChatUsedBytes"]=uploads.ChatUsedBytes(await db.Messages.Where(x=>x.AttachmentPath!=null).Select(x=>x.AttachmentPath!).ToListAsync());
   ViewData["Page"]=page;ViewData["Title"]=page.IsTeacher?conversation.OtherUser.DisplayName:"أ. محمد عادل";
   return View(new ChatPageModel{Page=page,Conversation=conversation,ContextTitle=title});
  }
@@ -46,7 +47,7 @@ public partial class DemoController
   if(conversation==null){conversation=new Conversation{Id=Guid.NewGuid().ToString("N"),OtherUserId=other,StudentId=student.Id,ContextType=contextType,ContextId=contextId};db.Conversations.Add(conversation);await db.SaveChangesAsync();}
   return RedirectToAction(nameof(Chat),new{id=conversation.Id});
  }
- [HttpPost,RequestSizeLimit(6*1024*1024)]
+ [HttpPost,RequestSizeLimit(3*1024*1024)]
  public async Task<IActionResult> SendMessage(string id,Guid clientMessageId,string? text,IFormFile? attachment)
  {
   var page=await Page();var conversation=await ConversationFor(page,id);if(conversation==null)return NotFound();
@@ -55,7 +56,7 @@ public partial class DemoController
   if(clientMessageId==Guid.Empty)return BadRequest();
   if((text?.Length??0)>2000){TempData["Error"]="الرسالة لا تتجاوز ٢٠٠٠ حرف.";return RedirectToAction(nameof(Chat),new{id});}
   Droosy_PL.Services.SavedUpload? file;
-  try{file=await uploads.SaveAsync(attachment);}catch(ArgumentException e){TempData["Error"]=e.Message;return RedirectToAction(nameof(Chat),new{id});}
+  try{file=await uploads.SaveAsync(attachment,chat:true,existingPaths:await db.Messages.Where(x=>x.AttachmentPath!=null).Select(x=>x.AttachmentPath!).ToListAsync());}catch(ArgumentException e){TempData["Error"]=e.Message;return RedirectToAction(nameof(Chat),new{id});}
   if(string.IsNullOrWhiteSpace(text)&&file==null){TempData["Error"]="اكتب رسالة أو اختر مرفقًا.";return RedirectToAction(nameof(Chat),new{id});}
   var message=new Message{Id=clientMessageId.ToString("N"),ConversationId=id,SenderId=page.Account!.Id,Text=text?.Trim()??"",SentAtUtc=DateTime.UtcNow,AttachmentPath=file?.Path,AttachmentName=file?.Name,AttachmentType=file?.ContentType};
   db.Messages.Add(message);var recipient=page.Account.Id==conversation.TeacherId?conversation.OtherUserId:conversation.TeacherId;
@@ -67,7 +68,9 @@ public partial class DemoController
  {
   var page=await Page();if(page.Account==null)return RedirectToAction(nameof(Index));
   var message=await db.Messages.Include(x=>x.Conversation).SingleOrDefaultAsync(x=>x.Id==id&&(x.Conversation.TeacherId==page.Account.Id||x.Conversation.OtherUserId==page.Account.Id));
-  if(message?.AttachmentPath==null)return NotFound();var path=uploads.Resolve(message.AttachmentPath);if(!System.IO.File.Exists(path))return NotFound();
+  if(message?.AttachmentPath==null)return NotFound();var relative=message.AttachmentPath;
+    if(Request.Cookies["droosy-language"]=="en" && relative.StartsWith("Lessons/",StringComparison.Ordinal) && relative.EndsWith(".pdf",StringComparison.Ordinal))relative=relative[..^4]+".en.pdf";
+    var path=uploads.Resolve(relative);if(!System.IO.File.Exists(path))return NotFound();
   return PhysicalFile(path,message.AttachmentType??"application/octet-stream",message.AttachmentName,enableRangeProcessing:true);
  }
  public async Task<IActionResult> Announcements()

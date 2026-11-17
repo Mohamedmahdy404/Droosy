@@ -8,13 +8,14 @@ function fixture(seen = false, storageFails = false, generation = 'generation-1'
     const input = {};
     const status = {value:'Draft', addEventListener:(name, fn)=>callbacks.change=fn};
     const schedule = {hidden:false, querySelector:()=>input};
-    const hint = {hidden:false, contains:()=>false, addEventListener:()=>{}};
+    const hint = {hidden:false, dataset:{hint:'restart-demo'}, contains:()=>false, addEventListener:()=>{}};
+    const localHelp = {dataset:{showHint:'restart-demo'},addEventListener:(name,fn)=>callbacks.localHelp=fn};
     const close = {parentElement:hint, addEventListener:(name,fn)=>callbacks.close=fn};
     const help = {addEventListener:(name,fn)=>callbacks.help=fn};
     const submit = {disabled:false, setAttribute:(key,value)=>submit[key]=value, removeAttribute:key=>delete submit[key]};
     const form = {checkValidity:()=>true, querySelector:()=>submit, addEventListener:(name,fn)=>callbacks.submit=fn};
     const document = {activeElement:null,
-        querySelectorAll:selector=>selector==='[data-hint]'?[hint]:selector==='[data-dismiss]'?[close]:selector==='form'?[form]:[submit],
+        querySelectorAll:selector=>selector==='[data-hint]'?[hint]:selector==='[data-show-hint]'?[localHelp]:selector==='[data-dismiss]'?[close]:selector==='form'?[form]:[submit],
         querySelector:selector=>selector==='[data-show-hints]'?help:selector==='#publication-status'?status:selector==='#schedule-field'?schedule:null};
     const query = document.querySelector;
     document.querySelector = selector => selector === 'meta[name="droosy-generation"]' ? {content:generation} : query(selector);
@@ -36,6 +37,8 @@ page.callbacks.help();
 assert.equal(page.hint.hidden,false);
 page.callbacks.close();
 assert.equal(page.hint.hidden,true);
+page.callbacks.localHelp();
+assert.equal(page.hint.hidden,false,'Local help should reopen its explanation');
 assert.equal(fixture(true).hint.hidden,true);
 assert.equal(fixture(false,true).hint.hidden,false);
 assert.equal(page.input.disabled,true);

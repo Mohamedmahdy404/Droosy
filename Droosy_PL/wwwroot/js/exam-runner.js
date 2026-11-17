@@ -15,11 +15,14 @@
   const data=new FormData(form);data.set('intent',intent);
   if(intent==='submit')form.querySelectorAll('input[type="radio"]').forEach(input=>input.disabled=true);
   try{
-   const response=await fetch(form.action,{method:'POST',body:data,headers:{Accept:'application/json'},credentials:'same-origin',keepalive:intent==='save'});
-   if(!response.ok)throw Error('save failed');const result=await response.json();offset=Date.parse(result.serverNowUtc)-Date.now();dirty=false;
+   const response=await fetch(form.action,{method:'POST',body:data,headers:{Accept:'application/json','X-Droosy-Generation':document.querySelector('meta[name="droosy-generation"]')?.content||''},credentials:'same-origin',keepalive:intent==='save'});
+   if(response.status===409)throw Error('بدأت دورة جديدة للتجربة. أعد فتح الصفحة.');
+   const result=await response.json();
+   if(!response.ok)throw Error(result.error||'تعذّر الحفظ. اضغط حفظ الإجابات لإعادة المحاولة.');
+   offset=Date.parse(result.serverNowUtc)-Date.now();dirty=false;
    status.textContent=result.submitted?'تم تسليم الاختبار':'✓ الإجابات محفوظة';
    if(result.submitted){finished=true;location.assign(location.pathname);return;}
-  }catch{status.textContent='تعذّر الحفظ. اضغط حفظ الإجابات لإعادة المحاولة.';dirty=true;}
+  }catch(error){status.textContent=error instanceof Error&&/[\u0600-\u06ff]/.test(error.message)?error.message:'تعذّر الحفظ. اضغط حفظ الإجابات لإعادة المحاولة.';dirty=true;}
   finally{busy=false;if(!finished&&seconds()>0)form.querySelectorAll('input[type="radio"]').forEach(input=>input.disabled=false);if(queued){const intent=queued;queued=false;save(intent);}}
  }
  form.addEventListener('change',event=>{if(event.target.matches('input[type="radio"]')){dirty=true;update();save();}});

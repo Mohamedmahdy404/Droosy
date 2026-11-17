@@ -370,3 +370,9 @@ App_Data/Uploads/
 .verification/upload-check/
 
 .verification/isolated/
+
+.verification/translation-html/
+.verification/i18n-source.json
+
+.verification/missing-translations.json
+.verification/rendered-text.json
